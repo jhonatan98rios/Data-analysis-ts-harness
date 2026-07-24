@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface UploadedFile {
   name: string;
@@ -161,7 +163,32 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
   };
 
   return (
-    <div className="flex flex-col flex-1 relative bg-[#efeae2] dark:bg-[#0b141a]">
+    <>
+      <style>{`
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: 600; margin: 0.5em 0 0.25em; }
+        .markdown-body h1 { font-size: 1.1em; }
+        .markdown-body h2 { font-size: 1.05em; }
+        .markdown-body h3 { font-size: 1em; }
+        .markdown-body p { margin: 0.25em 0; }
+        .markdown-body ul, .markdown-body ol { padding-left: 1.2em; margin: 0.25em 0; }
+        .markdown-body li { margin: 0.1em 0; }
+        .markdown-body code { background: rgba(0,0,0,0.08); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.9em; }
+        .dark .markdown-body code { background: rgba(255,255,255,0.1); }
+        .markdown-body pre { background: rgba(0,0,0,0.06); padding: 0.5em; border-radius: 4px; overflow-x: auto; margin: 0.25em 0; }
+        .dark .markdown-body pre { background: rgba(255,255,255,0.06); }
+        .markdown-body pre code { background: none; padding: 0; }
+        .markdown-body table { border-collapse: collapse; margin: 0.25em 0; width: 100%; font-size: 0.85em; }
+        .markdown-body th, .markdown-body td { border: 1px solid rgba(0,0,0,0.15); padding: 0.25em 0.5em; text-align: left; }
+        .dark .markdown-body th, .dark .markdown-body td { border-color: rgba(255,255,255,0.15); }
+        .markdown-body th { background: rgba(0,0,0,0.06); font-weight: 600; }
+        .dark .markdown-body th { background: rgba(255,255,255,0.06); }
+        .markdown-body blockquote { border-left: 3px solid rgba(0,0,0,0.2); margin: 0.25em 0; padding-left: 0.5em; color: rgba(0,0,0,0.6); }
+        .dark .markdown-body blockquote { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); }
+        .markdown-body strong { font-weight: 600; }
+        .markdown-body a { color: #2563eb; text-decoration: underline; }
+        .dark .markdown-body a { color: #60a5fa; }
+      `}</style>
+      <div className="flex flex-col flex-1 relative bg-[#efeae2] dark:bg-[#0b141a]">
       {/* chat bg pattern */}
       <div
         className="absolute inset-0 opacity-[0.06] dark:opacity-[0.04] pointer-events-none"
@@ -213,7 +240,16 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
                   </span>
                 </div>
               )}
-              {m.text && <p className="pr-10 whitespace-pre-wrap">{m.text}</p>}
+              {m.text &&
+                (m.role === 'assistant' ? (
+                  <div className="pr-10 markdown-body text-sm leading-snug">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {m.text}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="pr-10 whitespace-pre-wrap">{m.text}</p>
+                ))}
               <span className="absolute bottom-1 right-2 text-[10px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
                 {m.time}
               </span>
@@ -287,5 +323,6 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
         </button>
       </form>
     </div>
+    </>
   );
 }
