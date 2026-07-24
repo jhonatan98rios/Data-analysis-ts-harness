@@ -16,27 +16,95 @@ function now() {
 export function ChatWindow({ tenantId }: { tenantId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const send = (e: FormEvent) => {
+  const streamChat = async (history: { role: 'user' | 'assistant'; content: string }[]) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: history }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let replyText = '';
+
+    const replyId = Date.now() + 1;
+    setMessages((prev) => [
+      ...prev,
+      { id: replyId, role: 'assistant', text: '', time: now() },
+    ]);
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6);
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.token) {
+            replyText += parsed.token;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === replyId ? { ...m, text: replyText, time: now() } : m,
+              ),
+            );
+          }
+        } catch {
+          // skip malformed chunks
+        }
+      }
+    }
+  };
+
+  const send = async (e: FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || streaming) return;
 
     const userMsg: Message = { id: Date.now(), role: 'user', text, time: now() };
-    const reply: Message = {
-      id: Date.now() + 1,
-      role: 'assistant',
-      text: `[placeholder] eco: "${text}"`,
-      time: now(),
-    };
-
-    setMessages((prev) => [...prev, userMsg, reply]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput('');
+    setStreaming(true);
+
+    const history = [...messages, userMsg].map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.text,
+    }));
+
+    try {
+      await streamChat(history);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'stream error';
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now(), role: 'assistant', text: `Error: ${msg}`, time: now() },
+      ]);
+    } finally {
+      setStreaming(false);
+    }
   };
 
   return (
