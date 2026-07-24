@@ -17,7 +17,30 @@ interface UploadedFile {
   data: string; // base64
 }
 
-function buildSystemPrompt(files?: UploadedFile[]): string {
+function buildToolsManual(tools?: StructuredToolInterface[]): string {
+  if (!tools?.length) return '';
+
+  const entries = tools.map((t) => {
+    const schema = (t as { schema?: { shape?: Record<string, unknown> } }).schema;
+    const params = schema?.shape
+      ? Object.keys(schema.shape).join(', ')
+      : 'input';
+    return [
+      `### ${t.name}`,
+      `**O que faz:** ${t.description}`,
+      `**Quando usar:** sempre que o usuário pedir para calcular, somar, totalizar, agregar, ou obter o valor total de uma coluna nos dados.`,
+      `**Parâmetros:** \`${params}\``,
+      `**Exemplo:** se o usuário perguntar "qual o total de vendas?", chame \`${t.name}\` com a coluna que contém os valores de venda.`,
+    ].join('\n');
+  });
+
+  return `\n\n## 🛠 Manual de Ferramentas\n\nAs ferramentas abaixo estão disponíveis. Use-as obrigatoriamente quando o usuário fizer perguntas numéricas sobre os dados — NUNCA tente calcular ou estimar valores de cabeça.\n\n${entries.join('\n\n')}\n\n**Regra de ouro:** se a pergunta envolve números, valores, totais, somas, médias, contagens, ou qualquer operação matemática sobre os dados → chame a ferramenta correspondente. Nunca responda com números inventados ou estimados.`;
+}
+
+function buildSystemPrompt(
+  files?: UploadedFile[],
+  tools?: StructuredToolInterface[],
+): string {
   let prompt = `Você é o Data Analysis Harness, um analista de dados agêntico estilo Power BI.
 Seu papel é ajudar usuários a fazer upload de arquivos de dados e realizar análises.
 
@@ -35,6 +58,8 @@ Seu papel é ajudar usuários a fazer upload de arquivos de dados e realizar an�
 - Seja conciso e direto nas respostas
 - Use formatação Markdown para estruturar respostas com tabelas e listas
 - Use as ferramentas disponíveis quando precisar consultar dados numéricos`;
+
+  prompt += buildToolsManual(tools);
 
   if (files?.length) {
     const fileList = files
@@ -98,7 +123,7 @@ export async function* streamResponse(
   const chat = toolMap.size > 0 ? chatBase.bindTools(tools!) : chatBase;
 
   const langchainMessages: BaseMessage[] = [
-    new SystemMessage(buildSystemPrompt(files)),
+    new SystemMessage(buildSystemPrompt(files, tools)),
     ...messages.map((m) =>
       m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content),
     ),
