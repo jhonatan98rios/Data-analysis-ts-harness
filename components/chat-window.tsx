@@ -40,7 +40,7 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#efeae2] dark:bg-[#0b141a]">
+    <div className="flex flex-col flex-1 relative bg-[#efeae2] dark:bg-[#0b141a]">
       {/* chat bg pattern */}
       <div className="absolute inset-0 opacity-[0.06] dark:opacity-[0.04] pointer-events-none"
         style={{

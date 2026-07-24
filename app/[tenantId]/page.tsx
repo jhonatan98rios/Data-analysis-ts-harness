@@ -6,5 +6,9 @@ export default async function TenantChatPage({
   params: Promise<{ tenantId: string }>;
 }) {
   const { tenantId } = await params;
-  return <ChatWindow tenantId={tenantId} />;
+  return (
+    <div className="flex-1 flex flex-col">
+      <ChatWindow tenantId={tenantId} />
+    </div>
+  );
 }
