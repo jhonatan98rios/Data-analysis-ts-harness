@@ -1,6 +1,7 @@
-import { streamResponse, type StreamToken } from '@/lib/chat/stream';
+import { streamResponse } from '@/lib/chat/stream';
 import { parseAndStore } from '@/lib/data/store';
-import { createAggregateSumTool } from '@/lib/tools/aggregate';
+import { createAggregateTool } from '@/lib/tools/aggregate';
+import { createProfileTool } from '@/lib/tools/profile';
 
 export const runtime = 'edge';
 
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     // Create tools bound to this tenant's data
-    const tools = [createAggregateSumTool(tenantId)];
+    const tools = [createProfileTool(tenantId), createAggregateTool(tenantId)];
 
     const encoder = new TextEncoder();
 

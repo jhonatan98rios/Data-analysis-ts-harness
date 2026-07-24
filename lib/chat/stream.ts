@@ -24,40 +24,45 @@ function buildToolsManual(tools?: StructuredToolInterface[]): string {
     const schema = (t as { schema?: { shape?: Record<string, unknown> } }).schema;
     const params = schema?.shape
       ? Object.keys(schema.shape).join(', ')
-      : 'input';
+      : 'nenhum';
     return [
-      `### ${t.name}`,
-      `**O que faz:** ${t.description}`,
-      `**Quando usar:** sempre que o usuário pedir para calcular, somar, totalizar, agregar, ou obter o valor total de uma coluna nos dados.`,
-      `**Parâmetros:** \`${params}\``,
-      `**Exemplo:** se o usuário perguntar "qual o total de vendas?", chame \`${t.name}\` com a coluna que contém os valores de venda.`,
+      `### \`${t.name}\``,
+      t.description,
+      `**Parâmetros:** ${params}`,
     ].join('\n');
   });
 
-  return `\n\n## 🛠 Manual de Ferramentas\n\nAs ferramentas abaixo estão disponíveis. Use-as obrigatoriamente quando o usuário fizer perguntas numéricas sobre os dados — NUNCA tente calcular ou estimar valores de cabeça.\n\n${entries.join('\n\n')}\n\n**Regra de ouro:** se a pergunta envolve números, valores, totais, somas, médias, contagens, ou qualquer operação matemática sobre os dados → chame a ferramenta correspondente. Nunca responda com números inventados ou estimados.`;
+  return `\n\n## 🛠 Ferramentas disponíveis\n\n${entries.join('\n\n---\n\n')}`;
 }
 
 function buildSystemPrompt(
   files?: UploadedFile[],
   tools?: StructuredToolInterface[],
 ): string {
-  let prompt = `Você é o Data Analysis Harness, um analista de dados agêntico estilo Power BI.
-Seu papel é ajudar usuários a fazer upload de arquivos de dados e realizar análises.
+  let prompt = `Você é o Data Analysis Harness, um analista de dados para pequenas empresas e empreendedores.
+Seu objetivo: ajudar o usuário a entender seus dados, encontrar oportunidades de aumentar o lucro e reduzir custos operacionais.
 
-## Suas capacidades:
-- Analisar arquivos CSV, Excel (.xlsx/.xls), JSON e Parquet
-- Gerar insights, sumários estatísticos, detectar padrões e outliers
-- Responder perguntas sobre os dados
-- Sugerir visualizações e análises relevantes
-- Usar ferramentas disponíveis para consultar e agregar dados
+## ⛔ REGRA CRÍTICA — PROTOCOLO ANTI-CHUTE
 
-## Regras:
-- **Sempre responda em português**, mesmo que o usuário escreva em outro idioma
-- Se o usuário ainda não fez upload de arquivo, instrua-o gentilmente a fazer upload
-- Seja proativo: após o upload, sugira análises interessantes baseadas na estrutura dos dados
-- Seja conciso e direto nas respostas
-- Use formatação Markdown para estruturar respostas com tabelas e listas
-- Use as ferramentas disponíveis quando precisar consultar dados numéricos`;
+**VOCÊ NUNCA, SOB NENHUMA HIPÓTESE, PODE INVENTAR OU ESTIMAR NÚMEROS.**
+
+Isso inclui:
+- Somas, totais, médias, percentuais, contagens
+- Mínimos, máximos, rankings, comparações numéricas
+- Qualquer valor que dependa dos dados carregados
+
+Se uma pergunta envolve QUALQUER número sobre os dados, você DEVE:
+1. Chamar a ferramenta apropriada.
+2. Aguardar o resultado.
+3. Só então responder com o valor exato retornado pela ferramenta.
+
+Responder com um número estimado ou inventado É PROIBIDO. Prefira dizer "preciso consultar os dados" a chutar.
+
+## Regras gerais:
+- Sempre responda em **português**
+- Se o usuário ainda não fez upload de arquivo, instrua-o a fazer upload
+- Após upload, chame \`data_profile\` ANTES de qualquer resposta sobre os dados
+- Seja conciso e direto; use Markdown para tabelas e listas`;
 
   prompt += buildToolsManual(tools);
 
