@@ -1,4 +1,6 @@
 import { streamResponse, type StreamToken } from '@/lib/chat/stream';
+import { parseAndStore } from '@/lib/data/store';
+import { createAggregateSumTool } from '@/lib/tools/aggregate';
 
 export const runtime = 'edge';
 
@@ -14,11 +16,21 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       messages: { role: 'user' | 'assistant'; content: string }[];
       files?: UploadedFile[];
+      tenantId?: string;
     };
 
     if (!body.messages?.length) {
       return new Response('messages required', { status: 400 });
     }
+
+    // Parse uploaded files into the data store
+    const tenantId = body.tenantId || 'default';
+    if (body.files?.length) {
+      parseAndStore(tenantId, body.files);
+    }
+
+    // Create tools bound to this tenant's data
+    const tools = [createAggregateSumTool(tenantId)];
 
     const encoder = new TextEncoder();
 
@@ -27,7 +39,7 @@ export async function POST(req: Request) {
         const enqueue = (data: Record<string, unknown>) =>
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         try {
-          for await (const st of streamResponse(body.messages, body.files)) {
+          for await (const st of streamResponse(body.messages, body.files, tools)) {
             enqueue(st.type === 'thinking' ? { thinking: st.text } : { token: st.text });
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));

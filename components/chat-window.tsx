@@ -68,7 +68,7 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history, files }),
+      body: JSON.stringify({ messages: history, files, tenantId }),
       signal: controller.signal,
     });
 
