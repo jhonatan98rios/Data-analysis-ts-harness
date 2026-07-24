@@ -2,13 +2,21 @@ import { streamResponse } from '@/lib/chat/stream';
 
 export const runtime = 'edge';
 
+interface UploadedFile {
+  name: string;
+  type: string;
+  size: number;
+  data: string; // base64
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages } = (await req.json()) as {
+    const body = (await req.json()) as {
       messages: { role: 'user' | 'assistant'; content: string }[];
+      files?: UploadedFile[];
     };
 
-    if (!messages?.length) {
+    if (!body.messages?.length) {
       return new Response('messages required', { status: 400 });
     }
 
@@ -17,7 +25,7 @@ export async function POST(req: Request) {
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const token of streamResponse(messages)) {
+          for await (const token of streamResponse(body.messages, body.files)) {
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ token })}\n\n`),
             );
