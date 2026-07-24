@@ -100,6 +100,7 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
         try {
           const parsed = JSON.parse(data);
           if (parsed.error) throw new Error(parsed.error);
+          // ponytail: thinking tokens ignored in UI, only token builds visible text
           if (parsed.token) {
             replyText += parsed.token;
             setMessages((prev) =>
@@ -108,6 +109,7 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
               ),
             );
           }
+          // thinking tokens: silently consumed, not rendered
         } catch {
           // skip malformed chunks
         }

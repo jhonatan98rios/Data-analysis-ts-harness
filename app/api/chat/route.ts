@@ -1,4 +1,4 @@
-import { streamResponse } from '@/lib/chat/stream';
+import { streamResponse, type StreamToken } from '@/lib/chat/stream';
 
 export const runtime = 'edge';
 
@@ -24,19 +24,17 @@ export async function POST(req: Request) {
 
     const readable = new ReadableStream({
       async start(controller) {
+        const enqueue = (data: Record<string, unknown>) =>
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         try {
-          for await (const token of streamResponse(body.messages, body.files)) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ token })}\n\n`),
-            );
+          for await (const st of streamResponse(body.messages, body.files)) {
+            enqueue(st.type === 'thinking' ? { thinking: st.text } : { token: st.text });
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'stream error';
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`),
-          );
+          enqueue({ error: msg });
           controller.close();
         }
       },

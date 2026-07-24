@@ -58,19 +58,30 @@ function createDeepSeekChat(): ChatOpenAI {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) throw new Error('DEEPSEEK_API_KEY not set');
 
+  // ponytail: thinking enabled via model_kwargs, toggle with DEEPSEEK_THINKING=false
+  const enableThinking = process.env.DEEPSEEK_THINKING !== 'false';
+
   return new ChatOpenAI({
     modelName: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
     apiKey,
     configuration: { baseURL: DEEPSEEK_BASE_URL },
     streaming: true,
     temperature: 0.7,
+    modelKwargs: enableThinking
+      ? { thinking: { type: 'enabled' } }
+      : undefined,
   });
+}
+
+export interface StreamToken {
+  type: 'token' | 'thinking';
+  text: string;
 }
 
 export async function* streamResponse(
   messages: { role: 'user' | 'assistant'; content: string }[],
   files?: UploadedFile[],
-): AsyncGenerator<string> {
+): AsyncGenerator<StreamToken> {
   const chat = createDeepSeekChat();
 
   const langchainMessages: BaseMessage[] = [
@@ -83,9 +94,15 @@ export async function* streamResponse(
   const stream = await chat.stream(langchainMessages);
 
   for await (const chunk of stream) {
+    const reasoning = (chunk.additional_kwargs as Record<string, unknown> | undefined)
+      ?.reasoning_content as string | undefined;
+    if (typeof reasoning === 'string' && reasoning.length > 0) {
+      yield { type: 'thinking', text: reasoning };
+    }
+
     const text = chunk.content;
     if (typeof text === 'string' && text.length > 0) {
-      yield text;
+      yield { type: 'token', text };
     }
   }
 }

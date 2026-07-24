@@ -19,7 +19,7 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params) {
       const msg = `${params.type}: ${params.description}`;
-      const add = execSync("git add *", { encoding: "utf-8" });
+      const add = execSync("git add -A", { encoding: "utf-8" });
       const commit = execSync(`git commit -m "${msg}"`, { encoding: "utf-8" });
       const push = execSync("git push", { encoding: "utf-8" });
       return {
