@@ -1,0 +1,16 @@
+id: idd-no-ui-imports
+message: |
+  lib-no-ui-imports: Nenhum módulo em `lib/` pode importar de `app/`, `components/`, ou `next/*`.
+  Rationale: Desacoplamento da lógica de negócio da UI. `lib/` deve funcionar sem React e sem Next.js.
+severity: error
+language: TypeScript
+files:
+  - "lib/**"
+rule:
+  any:
+    - pattern: "from 'next/$STUFF'"
+    - pattern: "from 'next/$STUFF/$MORE'"
+    - pattern: "from '@/app/$STUFF'"
+    - pattern: "from '@/components/$STUFF'"
+    - pattern: "from 'react'"
+    - pattern: "from 'react-dom'"

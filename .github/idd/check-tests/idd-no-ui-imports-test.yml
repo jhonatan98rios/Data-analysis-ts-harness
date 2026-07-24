@@ -1,0 +1,22 @@
+id: idd-no-ui-imports-test
+rule: idd-no-ui-imports
+invalid:
+  - |
+    // Deve falhar: import de next
+    import { NextResponse } from 'next/server'
+  - |
+    // Deve falhar: import de components
+    import { Button } from '@/components/button'
+  - |
+    // Deve falhar: import de react
+    import { useState } from 'react'
+valid:
+  - |
+    // Válido: import de lib interna
+    import { queryDataset } from '@/lib/tools/query'
+  - |
+    // Válido: import de zod
+    import { z } from 'zod'
+  - |
+    // Válido: import de better-sqlite3
+    import Database from 'better-sqlite3'
