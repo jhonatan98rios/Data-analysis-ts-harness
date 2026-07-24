@@ -2,6 +2,10 @@ import { streamResponse } from '@/lib/chat/stream';
 import { parseAndStore } from '@/lib/data/store';
 import { createAggregateTool } from '@/lib/tools/aggregate';
 import { createProfileTool } from '@/lib/tools/profile';
+import { createValueCountsTool, createGroupByTool } from '@/lib/tools/grouping';
+import { createTopNTool, createFilterTool, createParetoTool } from '@/lib/tools/ranking';
+import { createComparePeriodsTool, createTrendTool } from '@/lib/tools/timeseries';
+import { createCorrelationTool, createRatioTool } from '@/lib/tools/relation';
 
 export const runtime = 'edge';
 
@@ -31,7 +35,19 @@ export async function POST(req: Request) {
     }
 
     // Create tools bound to this tenant's data
-    const tools = [createProfileTool(tenantId), createAggregateTool(tenantId)];
+    const tools = [
+      createProfileTool(tenantId),
+      createAggregateTool(tenantId),
+      createValueCountsTool(tenantId),
+      createGroupByTool(tenantId),
+      createTopNTool(tenantId),
+      createFilterTool(tenantId),
+      createParetoTool(tenantId),
+      createComparePeriodsTool(tenantId),
+      createTrendTool(tenantId),
+      createCorrelationTool(tenantId),
+      createRatioTool(tenantId),
+    ];
 
     const encoder = new TextEncoder();
 
