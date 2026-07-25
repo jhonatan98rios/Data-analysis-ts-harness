@@ -164,14 +164,18 @@ export async function* streamResponse(
     const toolCalls = (response as AIMessage).tool_calls;
 
     if (!toolCalls || toolCalls.length === 0) {
-      // Final answer — yield from invoke response (ponytail: no extra stream call)
+      const text = typeof response.content === 'string' ? response.content : '';
+      // ponytail: retry empty final responses (model sometimes yields blank content)
+      if (text.trim().length === 0) {
+        langchainMessages.push(new HumanMessage('Continue.'));
+        continue;
+      }
       const reasoning = (
         response.additional_kwargs as Record<string, unknown> | undefined
       )?.reasoning_content as string | undefined;
       if (typeof reasoning === 'string' && reasoning.length > 0) {
         yield { type: 'thinking', text: reasoning };
       }
-      const text = typeof response.content === 'string' ? response.content : '';
       if (text.length > 0) {
         yield { type: 'token', text };
       }
