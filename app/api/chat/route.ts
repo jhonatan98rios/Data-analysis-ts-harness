@@ -20,6 +20,10 @@ interface UploadedFile {
 }
 
 export async function POST(req: Request) {
+  // ponytail: CORS — echo origin back or * when absent. Enforcement is in middleware.
+  const origin = req.headers.get('origin');
+  const acao: string = origin || '*';
+
   try {
     const body = (await req.json()) as {
       messages: { role: 'user' | 'assistant'; content: string }[];
@@ -28,7 +32,10 @@ export async function POST(req: Request) {
     };
 
     if (!body.messages?.length) {
-      return new Response('messages required', { status: 400 });
+      return new Response('messages required', {
+        status: 400,
+        headers: { 'Access-Control-Allow-Origin': acao },
+      });
     }
 
     // guardrails: file size + type
@@ -37,7 +44,7 @@ export async function POST(req: Request) {
       if (fileErr) {
         return new Response(JSON.stringify({ error: fileErr }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': acao },
         });
       }
     }
@@ -49,14 +56,14 @@ export async function POST(req: Request) {
       if (lenErr) {
         return new Response(JSON.stringify({ error: lenErr }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': acao },
         });
       }
       const injectionErr = checkPromptInjection(lastUserMsg.content);
       if (injectionErr) {
         return new Response(JSON.stringify({ error: injectionErr }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': acao },
         });
       }
       // mutate: sanitize the content in-place before it hits the LLM
@@ -119,13 +126,14 @@ export async function POST(req: Request) {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': acao,
       },
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'internal error';
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': acao },
     });
   }
 }

@@ -31,32 +31,15 @@ function checkRateLimit(ip: string): boolean {
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 // ponytail: set ALLOWED_ORIGINS env var for production (comma-separated).
-// In dev (no env var), allow all localhost + 127.0.0.1 origins.
-function buildAllowedOrigins(): Set<string> {
-  const env = process.env.ALLOWED_ORIGINS;
-  if (env) return new Set(env.split(',').map((s) => s.trim()));
-  // dev: permissive for local development
-  return new Set([
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-  ]);
-}
+// Without it (dev mode), all origins are allowed.
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? new Set(process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()))
+  : null; // null = dev mode, allow all
 
-const ALLOWED_ORIGINS = buildAllowedOrigins();
-
-function getCorsHeaders(origin: string | null): Record<string, string> {
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
-    return {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Max-Age': '86400',
-    };
-  }
-  return {};
+function originAllowed(origin: string | null): boolean {
+  if (!origin) return true; // same-origin, no Origin header
+  if (!ALLOWED_ORIGINS) return true; // dev mode: allow all
+  return ALLOWED_ORIGINS.has(origin);
 }
 
 // ── Body size ──────────────────────────────────────────────────────────────
@@ -78,21 +61,26 @@ export function middleware(req: NextRequest) {
 
   // CORS preflight
   if (req.method === 'OPTIONS') {
-    const corsHeaders = getCorsHeaders(origin);
-    if (Object.keys(corsHeaders).length === 0) {
+    if (!originAllowed(origin)) {
       return NextResponse.json({ error: 'Origem não permitida.' }, { status: 403 });
     }
-    return new NextResponse(null, { status: 204, headers: corsHeaders });
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': origin || '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
   }
 
   // CORS — validate origin for POST
-  if (req.method === 'POST' && origin) {
-    if (!ALLOWED_ORIGINS.has(origin)) {
-      return NextResponse.json(
-        { error: 'Origem não permitida.' },
-        { status: 403 },
-      );
-    }
+  if (req.method === 'POST' && !originAllowed(origin)) {
+    return NextResponse.json(
+      { error: 'Origem não permitida.' },
+      { status: 403 },
+    );
   }
 
   // Content-Type only enforced on POST /api/chat
@@ -117,7 +105,7 @@ export function middleware(req: NextRequest) {
 
   // pass through, attach CORS headers to response
   const response = NextResponse.next();
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
+  if (origin) {
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
