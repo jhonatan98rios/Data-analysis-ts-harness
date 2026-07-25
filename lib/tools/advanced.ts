@@ -211,3 +211,115 @@ export function createDescribeConditionalTool(tenantId: string) {
     },
   );
 }
+
+const PIVOT_OPS = ['sum', 'avg', 'count'] as const;
+
+export function createPivotTool(tenantId: string) {
+  return tool(
+    async ({
+      rowColumn,
+      columnColumn,
+      valueColumn,
+      operation,
+    }: {
+      rowColumn: string;
+      columnColumn: string;
+      valueColumn: string;
+      operation: (typeof PIVOT_OPS)[number];
+    }) => {
+      const rows = getData(tenantId);
+      if (!rows?.length) return 'Nenhum dado carregado.';
+
+      const cols = getColumns(tenantId);
+      for (const c of [rowColumn, columnColumn, valueColumn]) {
+        if (!cols.includes(c)) {
+          return `Coluna "${c}" não encontrada. Disponíveis: ${cols.join(', ')}`;
+        }
+      }
+
+      // Build: { rowValue: { colValue: number[] } }
+      const matrix = new Map<string, Map<string, number[]>>();
+      const allColValues = new Set<string>();
+
+      for (const row of rows) {
+        const rv = String(row[rowColumn] ?? '(vazio)');
+        const cv = String(row[columnColumn] ?? '(vazio)');
+        const val = Number(row[valueColumn]);
+        if (isNaN(val)) continue;
+
+        allColValues.add(cv);
+        if (!matrix.has(rv)) matrix.set(rv, new Map());
+        const inner = matrix.get(rv)!;
+        if (!inner.has(cv)) inner.set(cv, []);
+        inner.get(cv)!.push(val);
+      }
+
+      // Sort column values for consistency
+      const colValues = [...allColValues].sort();
+
+      // Compute operation per cell, produce pivot rows
+      const data = [...matrix.entries()]
+        .map(([rv, inner]) => {
+          const out: Record<string, unknown> = { [rowColumn]: rv };
+          for (const cv of colValues) {
+            const nums = inner.get(cv) ?? [];
+            let result: number;
+            switch (operation) {
+              case 'sum':
+                result = nums.reduce((a, b) => a + b, 0);
+                break;
+              case 'avg':
+                result = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+                break;
+              case 'count':
+                result = nums.length;
+                break;
+            }
+            out[cv] = Math.round(result * 100) / 100;
+          }
+          return out;
+        })
+        .slice(0, 30); // ponytail: cap rows
+
+      return JSON.stringify({
+        pivot: `${rowColumn} × ${columnColumn}`,
+        operation,
+        rowColumn,
+        columnColumn,
+        valueColumn,
+        columns: colValues.slice(0, 15),
+        columnsTruncated: colValues.length > 15,
+        data,
+        _hint: 'Use plot com chartType="bar", xKey=<rowColumn>, yKeys=<columns>, stacked=false para barras agrupadas. Use stacked=true para empilhadas.',
+      });
+    },
+    {
+      name: 'pivot',
+      description: `Tabela dinâmica (pivot table): cruza duas colunas categóricas e agrega uma terceira coluna numérica. O resultado é perfeito para gráficos de barras agrupadas ou empilhadas.
+
+Exemplo: pivot(rowColumn="data", columnColumn="categoria", valueColumn="Vl_Total", operation="sum")
+→ Retorna dados no formato: [{data: "2024-01", Eletrônicos: 45000, Móveis: 32000}, ...]
+
+⚠️ Use esta ferramenta quando o usuário perguntar:
+- "Vendas por categoria agrupadas por mês/data/região?"
+- "Comparação de X por Y ao longo do tempo?"
+- "Tabela cruzada de..."
+- "Quero ver o valor por categoria, quebrado por filial/data/vendedor"
+- Antes de gerar gráficos de barras agrupadas: PRIMEIRO chame pivot, DEPOIS chame plot com os dados retornados.`,
+      schema: z.object({
+        rowColumn: z
+          .string()
+          .describe('Coluna para as LINHAS da tabela — normalmente a dimensão temporal (ex: "data", "mes") ou agrupamento principal (ex: "filial")'),
+        columnColumn: z
+          .string()
+          .describe('Coluna para as COLUNAS da tabela — as categorias que viram séries no gráfico (ex: "categoria", "produto", "vendedor")'),
+        valueColumn: z
+          .string()
+          .describe('Coluna numérica para agregar (ex: "Vl_Total", "receita", "quantidade")'),
+        operation: z
+          .enum(PIVOT_OPS)
+          .describe('Operação: sum (total), avg (média), count (contagem)'),
+      }),
+    },
+  );
+}

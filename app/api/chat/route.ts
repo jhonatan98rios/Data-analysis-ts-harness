@@ -6,7 +6,7 @@ import { createValueCountsTool, createGroupByTool } from '@/lib/tools/grouping';
 import { createTopNTool, createFilterTool, createParetoTool } from '@/lib/tools/ranking';
 import { createComparePeriodsTool, createTrendTool } from '@/lib/tools/timeseries';
 import { createCorrelationTool, createRatioTool } from '@/lib/tools/relation';
-import { createCountByGroupTool, createDescribeConditionalTool } from '@/lib/tools/advanced';
+import { createCountByGroupTool, createDescribeConditionalTool, createPivotTool } from '@/lib/tools/advanced';
 import { createPlotTool } from '@/lib/tools/plot';
 
 export const runtime = 'edge';
@@ -51,6 +51,7 @@ export async function POST(req: Request) {
       createRatioTool(tenantId),
       createCountByGroupTool(tenantId),
       createDescribeConditionalTool(tenantId),
+      createPivotTool(tenantId),
       createPlotTool(),
     ];
 
