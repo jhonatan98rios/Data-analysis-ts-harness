@@ -98,7 +98,7 @@ const INJECTION_PATTERNS = [
   /\b((initial|original|starting|first|hidden)\s+prompt)\b/i,
 
   // Delimiter injection
-  /(```|~~~)\s*(system|instructions?|prompt|rules?)\s*(```|~~~)/i,
+  /```[\s\S]*?\b(system|instructions?|prompt|rules?)\b[\s\S]*?```/i,
 ];
 
 const REJECTION_MESSAGE = 'Desculpe, não posso processar essa mensagem. Por favor, reformule sua pergunta.';
@@ -109,7 +109,9 @@ export function checkPromptInjection(text: string): string | null {
   if (!cleaned) return null;
 
   // Check invisible chars (only if ratio of invisible to visible is suspicious)
-  const invisibleCount = (cleaned.match(INVISIBLE_CHARS) || []).length;
+  // ponytail: global flag so .match returns all, not just first
+  const invisibleRegex = new RegExp(INVISIBLE_CHARS.source, 'g');
+  const invisibleCount = (cleaned.match(invisibleRegex) || []).length;
   if (invisibleCount > 3) {
     return REJECTION_MESSAGE;
   }
@@ -143,7 +145,7 @@ export function checkFiles(files: UploadedFile[]): string | null {
 
 // Strip HTML tags, event handlers, javascript: URLs
 const XSS_PATTERNS = [
-  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+  /<script\b[\s\S]*?<\/script>/gi,
   /<\s*\/?\s*(script|iframe|object|embed|applet|meta|link|style)\b[^>]*>/gi,
   /\bon\w+\s*=\s*["'][^"']*["']/gi,     // onerror=, onclick=, etc.
   /\bon\w+\s*=\s*[^\s>]+/gi,
