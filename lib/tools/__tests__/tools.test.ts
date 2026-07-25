@@ -36,7 +36,7 @@ describe('data_profile', () => {
     const r = p(raw as string);
 
     assert.strictEqual(r.rowCount, 10);
-    const cols = r.columns as { name: string; type: string; nulls: number }[];
+    const cols = r.columns as { name: string; type: string; nullCount: number }[];
     assert.ok(cols.length >= 7);
     const cat = cols.find((c) => c.name === 'categoria');
     assert.ok(cat);
@@ -224,7 +224,7 @@ describe('compare_periods', () => {
     }) as string);
     assert.ok(r.period1);
     assert.ok(r.period2);
-    assert.ok(typeof r.change.percent === 'number');
+    assert.ok(typeof (r.change as Record<string, unknown>).percent === 'number');
   });
 });
 

@@ -235,7 +235,7 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
             className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`relative max-w-[75%] px-3 py-2 text-sm leading-snug shadow-sm ${
+              className={`relative max-w-[90%] sm:max-w-[75%] px-3 py-2 text-sm leading-snug shadow-sm ${
                 m.role === 'user'
                   ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-lg rounded-tr-sm'
                   : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] rounded-lg rounded-tl-sm'
