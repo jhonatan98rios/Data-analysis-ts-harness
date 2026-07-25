@@ -258,7 +258,16 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
                 {m.text &&
                   (m.role === 'assistant' ? (
                     <div className="markdown-body text-[15px] leading-relaxed">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto -mx-1 px-1">
+                              <table>{children}</table>
+                            </div>
+                          ),
+                        }}
+                      >
                         {m.text || (isStreamingText(m) ? ' ' : '')}
                       </ReactMarkdown>
                       {/* typing indicator — shown when streaming still active and we're the last assistant msg */}
