@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChartCard } from '@/components/chart-card';
 import type { ChartSpec } from '@/lib/tools/plot';
-import { checkFileSize, checkFileType, checkPromptInjection } from '@/lib/guardrails';
+import { checkFileSize, checkFileType, checkPromptInjection, sanitizeInput } from '@/lib/guardrails';
 
 interface UploadedFile {
   name: string;
@@ -140,9 +140,10 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
     const hasInput = text || currentFile;
     if (!hasInput || streaming) return;
 
-    // guardrails: prompt injection check
-    if (text) {
-      const injectionErr = checkPromptInjection(text);
+    // guardrails: prompt injection + XSS
+    const safeText = text ? sanitizeInput(text) : text;
+    if (safeText) {
+      const injectionErr = checkPromptInjection(safeText);
       if (injectionErr) {
         setMessages((prev) => [
           ...prev,
@@ -158,7 +159,7 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
     const userMsg: Message = {
       id: Date.now(),
       role: 'user',
-      text: text || (file ? `[Arquivo enviado: ${file.name}]` : ''),
+      text: safeText || (file ? `[Arquivo enviado: ${file.name}]` : ''),
       time: now(),
       file: file ?? undefined,
     };

@@ -1,6 +1,7 @@
 // ponytail: centralized guardrails — add rules here, not scattered across files.
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
+const MAX_MESSAGE_LENGTH = 8_000; // characters
 
 interface UploadedFile {
   name: string;
@@ -134,6 +135,44 @@ export function checkFiles(files: UploadedFile[]): string | null {
   for (const f of files) {
     const typeErr = checkFileType(f);
     if (typeErr) return typeErr;
+  }
+  return null;
+}
+
+// ── XSS sanitization ───────────────────────────────────────────────────────
+
+// Strip HTML tags, event handlers, javascript: URLs
+const XSS_PATTERNS = [
+  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+  /<\s*\/?\s*(script|iframe|object|embed|applet|meta|link|style)\b[^>]*>/gi,
+  /\bon\w+\s*=\s*["'][^"']*["']/gi,     // onerror=, onclick=, etc.
+  /\bon\w+\s*=\s*[^\s>]+/gi,
+  /javascript\s*:\s*/gi,
+  /<\s*img[^>]+\bon\w+[^>]*>/gi,        // <img onerror=...>
+  /<\s*svg[^>]*\bon\w+[^>]*>/gi,        // <svg onload=...>
+  /<\s*body[^>]*\bon\w+[^>]*>/gi,
+];
+
+export function sanitizeInput(text: string): string {
+  let cleaned = text;
+  for (const pattern of XSS_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  // Strip remaining HTML tags
+  cleaned = cleaned.replace(/<[^>]*>/g, '');
+  // Unescape common entities back to safe chars
+  cleaned = cleaned
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+  return cleaned.trim();
+}
+
+// ── Message length ─────────────────────────────────────────────────────────
+
+export function checkMessageLength(text: string): string | null {
+  if (text.length > MAX_MESSAGE_LENGTH) {
+    return `Mensagem excede o limite de ${MAX_MESSAGE_LENGTH} caracteres.`;
   }
   return null;
 }

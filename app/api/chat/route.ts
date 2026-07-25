@@ -8,7 +8,7 @@ import { createComparePeriodsTool, createTrendTool } from '@/lib/tools/timeserie
 import { createCorrelationTool, createRatioTool } from '@/lib/tools/relation';
 import { createCountByGroupTool, createDescribeConditionalTool, createPivotTool } from '@/lib/tools/advanced';
 import { createPlotTool } from '@/lib/tools/plot';
-import { checkFiles, checkPromptInjection } from '@/lib/guardrails';
+import { checkFiles, checkPromptInjection, sanitizeInput, checkMessageLength } from '@/lib/guardrails';
 
 export const runtime = 'edge';
 
@@ -42,9 +42,16 @@ export async function POST(req: Request) {
       }
     }
 
-    // guardrails: prompt injection on the last user message
+    // guardrails: prompt injection + message length + XSS on the last user message
     const lastUserMsg = body.messages.filter((m) => m.role === 'user').at(-1);
     if (lastUserMsg) {
+      const lenErr = checkMessageLength(lastUserMsg.content);
+      if (lenErr) {
+        return new Response(JSON.stringify({ error: lenErr }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
       const injectionErr = checkPromptInjection(lastUserMsg.content);
       if (injectionErr) {
         return new Response(JSON.stringify({ error: injectionErr }), {
@@ -52,6 +59,8 @@ export async function POST(req: Request) {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      // mutate: sanitize the content in-place before it hits the LLM
+      lastUserMsg.content = sanitizeInput(lastUserMsg.content);
     }
 
     // Parse uploaded files into the data store
