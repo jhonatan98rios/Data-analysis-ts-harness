@@ -36,8 +36,8 @@ function useIsDark(): boolean {
 }
 
 const COLORS = [
-  '#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea',
-  '#0891b2', '#db2777', '#ea580c', '#4f46e5', '#65a30d',
+  '#6366f1', '#8b5cf6', '#06b6d4', '#f59e0b', '#10b981',
+  '#ec4899', '#f43f5e', '#6366f1', '#8b5cf6', '#06b6d4',
 ];
 
 function truncate(v: string, max = 20): string {
@@ -93,7 +93,7 @@ function DualAxisChart({ spec, dark }: { spec: ChartSpec; dark: boolean }) {
           <Bar key={key} yAxisId="left" dataKey={key} fill={COLORS[i % COLORS.length]} radius={[4, 4, 0, 0]} name={key} />
         ))}
         {spec.lineYKey && (
-          <Line yAxisId="right" type="monotone" dataKey={spec.lineYKey} stroke="#dc2626" strokeWidth={2} dot={{ r: 4 }} name={spec.lineYKey} />
+          <Line yAxisId="right" type="monotone" dataKey={spec.lineYKey} stroke="#f43f5e" strokeWidth={2} dot={{ r: 4 }} name={spec.lineYKey} />
         )}
       </ComposedChart>
     </ResponsiveContainer>
@@ -106,13 +106,13 @@ export function ChartCard({ spec }: { spec: ChartSpec }) {
   const { chartType, title, data, xKey, stacked, horizontal, donut } = spec;
 
   return (
-    <div className="my-3 bg-white dark:bg-[#182229] rounded-lg border border-black/10 dark:border-white/10 overflow-hidden">
-      <div className="px-4 py-2 border-b border-black/5 dark:border-white/5">
-        <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{title}</h4>
+    <div className="my-3 glass rounded-xl overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-black/5 dark:border-white/[0.06]">
+        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">{title}</h4>
       </div>
       <div className="px-2 py-3">
         {data.length === 0 ? (
-          <p className="text-sm text-zinc-500 p-4 text-center">Sem dados para exibir.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 p-4 text-center">Sem dados para exibir.</p>
         ) : chartType === 'histogram' ? (
           <Histogram spec={spec} dark={dark} />
         ) : chartType === 'dual_axis' ? (
