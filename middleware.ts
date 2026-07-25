@@ -30,11 +30,34 @@ function checkRateLimit(ip: string): boolean {
 }
 
 // ── CORS ───────────────────────────────────────────────────────────────────
-// ponytail: add production origins when you deploy
-const ALLOWED_ORIGINS = new Set([
-  'http://localhost:3000',
-  // 'https://your-domain.com',
-]);
+// ponytail: set ALLOWED_ORIGINS env var for production (comma-separated).
+// In dev (no env var), allow all localhost + 127.0.0.1 origins.
+function buildAllowedOrigins(): Set<string> {
+  const env = process.env.ALLOWED_ORIGINS;
+  if (env) return new Set(env.split(',').map((s) => s.trim()));
+  // dev: permissive for local development
+  return new Set([
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+  ]);
+}
+
+const ALLOWED_ORIGINS = buildAllowedOrigins();
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
+  return {};
+}
 
 // ── Body size ──────────────────────────────────────────────────────────────
 const MAX_BODY_SIZE = 5 * 1024 * 1024; // 5 MB (3MB file + overhead)
@@ -53,8 +76,17 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // CORS
-  if (origin) {
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    const corsHeaders = getCorsHeaders(origin);
+    if (Object.keys(corsHeaders).length === 0) {
+      return NextResponse.json({ error: 'Origem não permitida.' }, { status: 403 });
+    }
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
+  }
+
+  // CORS — validate origin for POST
+  if (req.method === 'POST' && origin) {
     if (!ALLOWED_ORIGINS.has(origin)) {
       return NextResponse.json(
         { error: 'Origem não permitida.' },
@@ -83,7 +115,14 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // pass through, attach CORS headers to response
+  const response = NextResponse.next();
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  return response;
 }
 
 export const config = {
