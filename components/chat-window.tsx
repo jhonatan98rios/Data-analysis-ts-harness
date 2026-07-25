@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { ChartCard } from '@/components/chart-card';
+import type { ChartSpec } from '@/lib/tools/plot';
 
 interface UploadedFile {
   name: string;
@@ -17,6 +19,7 @@ interface Message {
   text: string;
   time: string;
   file?: UploadedFile;
+  charts?: ChartSpec[];
 }
 
 function now() {
@@ -108,6 +111,15 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === replyId ? { ...m, text: replyText, time: now() } : m,
+              ),
+            );
+          }
+          if (parsed.chart) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === replyId
+                  ? { ...m, charts: [...(m.charts || []), parsed.chart], time: now() }
+                  : m,
               ),
             );
           }
@@ -250,6 +262,9 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
                 ) : (
                   <p className="pr-10 whitespace-pre-wrap">{m.text}</p>
                 ))}
+              {m.charts?.map((chart) => (
+                <ChartCard key={chart.id} spec={chart} />
+              ))}
               <span className="absolute bottom-1 right-2 text-[10px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
                 {m.time}
               </span>

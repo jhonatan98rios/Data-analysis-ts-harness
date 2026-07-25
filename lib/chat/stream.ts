@@ -7,6 +7,7 @@ import {
   type BaseMessage,
 } from '@langchain/core/messages';
 import type { StructuredToolInterface } from '@langchain/core/tools';
+import type { ChartSpec } from '@/lib/tools/plot';
 
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 
@@ -62,7 +63,9 @@ Responder com um número estimado ou inventado É PROIBIDO. Prefira dizer "preci
 - Sempre responda em **português**
 - Se o usuário ainda não fez upload de arquivo, instrua-o a fazer upload
 - Após upload, chame \`data_profile\` ANTES de qualquer resposta sobre os dados
-- Seja conciso e direto; use Markdown para tabelas e listas`;
+- Após qualquer análise numérica (group_by, pareto, trend, etc.), OFEREÇA gerar um gráfico com a tool \`plot\`
+- Use Markdown para tabelas e listas
+- Seja conciso e direto`;
 
   prompt += buildToolsManual(tools);
 
@@ -110,8 +113,9 @@ function createDeepSeekChat(): ChatOpenAI {
 }
 
 export interface StreamToken {
-  type: 'token' | 'thinking';
-  text: string;
+  type: 'token' | 'thinking' | 'chart';
+  text?: string;
+  chart?: ChartSpec;
 }
 
 // ponytail: max 5 tool-call loops, add config if needed
@@ -168,14 +172,41 @@ export async function* streamResponse(
         continue;
       }
       try {
-        const result = await tool.invoke(tc.args);
-        langchainMessages.push(
-          new ToolMessage({
-            content: typeof result === 'string' ? result : JSON.stringify(result),
-            tool_call_id: tc.id ?? '',
-            name: tc.name,
-          }),
-        );
+        const rawResult = await tool.invoke(tc.args);
+        const resultStr = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult);
+
+        // Intercept plot tool: emit chart event, push only summary to model
+        if (tc.name === 'plot') {
+          try {
+            const parsed = JSON.parse(resultStr);
+            if (parsed.chart) {
+              yield { type: 'chart', chart: parsed.chart as ChartSpec };
+            }
+            langchainMessages.push(
+              new ToolMessage({
+                content: parsed.summary ?? resultStr,
+                tool_call_id: tc.id ?? '',
+                name: tc.name,
+              }),
+            );
+          } catch {
+            langchainMessages.push(
+              new ToolMessage({
+                content: resultStr,
+                tool_call_id: tc.id ?? '',
+                name: tc.name,
+              }),
+            );
+          }
+        } else {
+          langchainMessages.push(
+            new ToolMessage({
+              content: resultStr,
+              tool_call_id: tc.id ?? '',
+              name: tc.name,
+            }),
+          );
+        }
       } catch (err) {
         langchainMessages.push(
           new ToolMessage({

@@ -7,6 +7,7 @@ import { createTopNTool, createFilterTool, createParetoTool } from '@/lib/tools/
 import { createComparePeriodsTool, createTrendTool } from '@/lib/tools/timeseries';
 import { createCorrelationTool, createRatioTool } from '@/lib/tools/relation';
 import { createCountByGroupTool, createDescribeConditionalTool } from '@/lib/tools/advanced';
+import { createPlotTool } from '@/lib/tools/plot';
 
 export const runtime = 'edge';
 
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
       createRatioTool(tenantId),
       createCountByGroupTool(tenantId),
       createDescribeConditionalTool(tenantId),
+      createPlotTool(),
     ];
 
     const encoder = new TextEncoder();
@@ -60,7 +62,13 @@ export async function POST(req: Request) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         try {
           for await (const st of streamResponse(body.messages, body.files, tools)) {
-            enqueue(st.type === 'thinking' ? { thinking: st.text } : { token: st.text });
+            if (st.type === 'chart' && st.chart) {
+              enqueue({ chart: st.chart });
+            } else if (st.type === 'thinking') {
+              enqueue({ thinking: st.text });
+            } else {
+              enqueue({ token: st.text });
+            }
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
