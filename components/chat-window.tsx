@@ -4,7 +4,9 @@ import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'r
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChartCard } from '@/components/chart-card';
+import { SessionDrawer } from '@/components/session-drawer';
 import type { ChartSpec } from '@/lib/tools/plot';
+import { loadSession, saveSession, upsertMeta, type SessionMessage, type SessionFile } from '@/lib/sessions';
 import { checkFileSize, checkFileType, checkPromptInjection, sanitizeInput } from '@/lib/guardrails';
 
 interface UploadedFile {
@@ -14,14 +16,7 @@ interface UploadedFile {
   data: string; // base64
 }
 
-interface Message {
-  id: number;
-  role: 'user' | 'assistant';
-  text: string;
-  time: string;
-  file?: UploadedFile;
-  charts?: ChartSpec[];
-}
+type Message = SessionMessage & { file?: UploadedFile }; // runtime: file has data, persisted: file is SessionFile without data
 
 function now() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -33,11 +28,15 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function ChatWindow({ tenantId }: { tenantId: string }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantId: string }) {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = loadSession(sessionId);
+    return saved ? (saved.messages as Message[]) : [];
+  });
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +44,22 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // ponytail: persist after each message change (debounced by React batching)
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const persisted: SessionMessage[] = messages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      text: m.text,
+      time: m.time,
+      file: m.file ? { name: m.file.name, type: m.file.type, size: m.file.size } : undefined,
+      charts: m.charts,
+    }));
+    saveSession(sessionId, { messages: persisted });
+    const lastUser = messages.filter((m) => m.role === 'user').at(-1);
+    upsertMeta(sessionId, lastUser?.text?.slice(0, 80) ?? '');
+  }, [messages, sessionId]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -219,12 +234,24 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
         .dark .markdown-body a { color: #818cf8; }
       `}</style>
 
+      <SessionDrawer currentId={sessionId} open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
       <div className="flex flex-col flex-1 relative bg-slate-50/80 dark:bg-neutral-950/90">
         {/* mesh gradient behind everything */}
         <div className="absolute inset-0 bg-mesh pointer-events-none" />
 
         {/* header — strong glass */}
         <header className="relative z-10 flex items-center gap-3 glass-strong px-4 py-3 shrink-0">
+          {/* hamburger */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors shrink-0"
+            aria-label="abrir sessões"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" className="fill-current">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-medium uppercase shadow-inner">
             {tenantId[0]}
           </div>
