@@ -8,6 +8,7 @@ import { createComparePeriodsTool, createTrendTool } from '@/lib/tools/timeserie
 import { createCorrelationTool, createRatioTool } from '@/lib/tools/relation';
 import { createCountByGroupTool, createDescribeConditionalTool, createPivotTool } from '@/lib/tools/advanced';
 import { createPlotTool } from '@/lib/tools/plot';
+import { checkFiles, checkPromptInjection } from '@/lib/guardrails';
 
 export const runtime = 'edge';
 
@@ -28,6 +29,29 @@ export async function POST(req: Request) {
 
     if (!body.messages?.length) {
       return new Response('messages required', { status: 400 });
+    }
+
+    // guardrails: file size + type
+    if (body.files?.length) {
+      const fileErr = checkFiles(body.files);
+      if (fileErr) {
+        return new Response(JSON.stringify({ error: fileErr }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // guardrails: prompt injection on the last user message
+    const lastUserMsg = body.messages.filter((m) => m.role === 'user').at(-1);
+    if (lastUserMsg) {
+      const injectionErr = checkPromptInjection(lastUserMsg.content);
+      if (injectionErr) {
+        return new Response(JSON.stringify({ error: injectionErr }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Parse uploaded files into the data store

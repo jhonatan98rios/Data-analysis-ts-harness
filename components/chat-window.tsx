@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChartCard } from '@/components/chart-card';
 import type { ChartSpec } from '@/lib/tools/plot';
+import { checkFileSize, checkFileType, checkPromptInjection } from '@/lib/guardrails';
 
 interface UploadedFile {
   name: string;
@@ -48,6 +49,12 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // guardrails: file size + type
+    const sizeErr = checkFileSize(file);
+    if (sizeErr) { alert(sizeErr); e.target.value = ''; return; }
+    const typeErr = checkFileType(file);
+    if (typeErr) { alert(typeErr); e.target.value = ''; return; }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -132,6 +139,18 @@ export function ChatWindow({ tenantId }: { tenantId: string }) {
     const text = input.trim();
     const hasInput = text || currentFile;
     if (!hasInput || streaming) return;
+
+    // guardrails: prompt injection check
+    if (text) {
+      const injectionErr = checkPromptInjection(text);
+      if (injectionErr) {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now(), role: 'assistant', text: injectionErr, time: now() },
+        ]);
+        return;
+      }
+    }
 
     const file = currentFile;
     setCurrentFile(null);
