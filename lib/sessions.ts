@@ -13,8 +13,16 @@ export interface SessionFile {
   size: number;
 }
 
+// ponytail: mirrors ChartSpec shape so persisted charts pass type-check
+// without importing server-side plot module into client-only session storage
 export interface SessionChart {
   id: string;
+  chartType: string;
+  title: string;
+  xKey: string;
+  yKey: string;
+  yKeys?: string[];
+  data: Record<string, unknown>[];
   [key: string]: unknown;
 }
 
