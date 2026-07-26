@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { ChartCard } from '@/components/chart-card';
 import { SessionDrawer } from '@/components/session-drawer';
 import type { ChartSpec } from '@/lib/tools/plot';
-import { loadSession, saveSession, upsertMeta, type SessionMessage, type SessionFile } from '@/lib/sessions';
+import { loadSession, saveSession, upsertMeta, type SessionMessage } from '@/lib/sessions';
 import { checkFileSize, checkFileType, checkPromptInjection, sanitizeInput } from '@/lib/guardrails';
 
 interface UploadedFile {
@@ -330,7 +330,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
                     <p className="whitespace-pre-wrap">{m.text}</p>
                   ))}
                 {m.charts?.map((chart) => (
-                  <ChartCard key={chart.id} spec={chart} />
+                  <ChartCard key={chart.id} spec={chart as ChartSpec} />
                 ))}
                 <span className={`block text-right text-[10px] mt-1 ${
                   m.role === 'user' ? 'text-white/60' : 'text-slate-400 dark:text-slate-500'
