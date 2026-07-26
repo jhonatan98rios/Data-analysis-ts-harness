@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation';
-import { newId } from '@/lib/sessions';
+
+function newId(): string {
+  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export default function Home() {
   redirect(`/${newId()}`);
