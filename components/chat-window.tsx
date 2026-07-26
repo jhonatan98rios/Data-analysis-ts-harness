@@ -251,8 +251,8 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
         {/* mesh gradient behind everything */}
         <div className="absolute inset-0 bg-mesh pointer-events-none" />
 
-        {/* header — strong glass */}
-        <header className="relative z-10 flex items-center gap-3 glass-strong px-4 py-3 shrink-0">
+        {/* header — sticky glass */}
+        <header className="relative z-10 sticky top-0 flex items-center gap-3 glass-strong px-4 py-3">
           {/* hamburger */}
           <button
             onClick={() => setDrawerOpen(true)}
@@ -263,13 +263,9 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
               <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
             </svg>
           </button>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-medium uppercase shadow-inner">
-            {tenantId[0]}
-          </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{tenantId}</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500">
-              {streaming ? 'digitando…' : 'online'}
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+              {sessionId.slice(0, 8)}
             </p>
           </div>
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
