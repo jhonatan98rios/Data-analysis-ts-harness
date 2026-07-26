@@ -354,9 +354,11 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
           <div ref={bottomRef} />
         </div>
 
+        <div className="relative z-10 sticky bottom-0 bg-gradient-to-t from-slate-50/80 via-slate-50/80 dark:from-neutral-950/90 dark:via-neutral-950/90 to-transparent pt-2 pb-2">
+
         {/* file chip above input */}
         {currentFile && (
-          <div className="relative z-10 mx-3 mb-1 flex items-center gap-2 glass-strong rounded-xl px-3 py-2 text-sm">
+          <div className="mx-3 mb-1 flex items-center gap-2 glass-strong rounded-xl px-3 py-2 text-sm">
             <svg viewBox="0 0 24 24" width="16" height="16" className="fill-indigo-500 dark:fill-indigo-400 shrink-0">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
             </svg>
@@ -373,7 +375,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
         {/* input bar — strong glass */}
         <form
           onSubmit={send}
-          className="relative z-10 flex items-center gap-2 glass-strong px-3 py-2.5 shrink-0 mx-2 mb-2 rounded-2xl"
+          className="flex items-center gap-2 glass-strong px-3 py-2.5 mx-2 rounded-2xl"
         >
           <input
             ref={fileInputRef}
@@ -413,6 +415,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
             </svg>
           </button>
         </form>
+        </div>
       </div>
     </>
   );
