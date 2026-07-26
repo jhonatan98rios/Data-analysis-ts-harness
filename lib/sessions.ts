@@ -1,5 +1,6 @@
-const INDEX_KEY = 'dah:idx';
-const PREFIX = 'dah:s:';
+const DB = 'dah';
+const STORE = 'sessions';
+const INDEX_KEY = '__index__';
 
 export interface SessionMeta {
   id: string;
@@ -11,6 +12,7 @@ export interface SessionFile {
   name: string;
   type: string;
   size: number;
+  data: string;
 }
 
 // ponytail: mirrors ChartSpec shape so persisted charts pass type-check
@@ -39,21 +41,61 @@ export interface SessionData {
   messages: SessionMessage[];
 }
 
-function read<T>(key: string, fallback: T): T {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? (JSON.parse(v) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+// ── IndexedDB helpers ──────────────────────────────────────────────────────
+// ponytail: single DB, single store, lazy init — scale with more stores if needed
+
+function open(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(STORE)) {
+        req.result.createObjectStore(STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
 }
 
-export function getIndex(): SessionMeta[] {
-  return read<SessionMeta[]>(INDEX_KEY, []).sort((a, b) => b.lastUpdate - a.lastUpdate);
+async function get<T>(key: string): Promise<T | undefined> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const txn = db.transaction(STORE, 'readonly');
+    const req = txn.objectStore(STORE).get(key);
+    req.onsuccess = () => resolve(req.result as T | undefined);
+    req.onerror = () => reject(req.error);
+  });
 }
 
-export function upsertMeta(id: string, preview: string): void {
-  const idx = read<SessionMeta[]>(INDEX_KEY, []);
+async function put(key: string, value: unknown): Promise<void> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const txn = db.transaction(STORE, 'readwrite');
+    const req = txn.objectStore(STORE).put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function del(key: string): Promise<void> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const txn = db.transaction(STORE, 'readwrite');
+    const req = txn.objectStore(STORE).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────
+
+export async function getIndex(): Promise<SessionMeta[]> {
+  const idx = await get<SessionMeta[]>(INDEX_KEY);
+  return (idx ?? []).sort((a, b) => b.lastUpdate - a.lastUpdate);
+}
+
+export async function upsertMeta(id: string, preview: string): Promise<void> {
+  const idx = (await get<SessionMeta[]>(INDEX_KEY)) ?? [];
   const now = Date.now();
   const i = idx.findIndex((m) => m.id === id);
   if (i >= 0) {
@@ -61,21 +103,22 @@ export function upsertMeta(id: string, preview: string): void {
   } else {
     idx.push({ id, lastUpdate: now, preview });
   }
-  localStorage.setItem(INDEX_KEY, JSON.stringify(idx));
+  await put(INDEX_KEY, idx);
 }
 
-export function loadSession(id: string): SessionData | null {
-  return read<SessionData | null>(PREFIX + id, null);
+export async function loadSession(id: string): Promise<SessionData | null> {
+  const data = await get<SessionData>(id);
+  return data ?? null;
 }
 
-export function saveSession(id: string, data: SessionData): void {
-  localStorage.setItem(PREFIX + id, JSON.stringify(data));
+export async function saveSession(id: string, data: SessionData): Promise<void> {
+  await put(id, data);
 }
 
-export function deleteSession(id: string): void {
-  localStorage.removeItem(PREFIX + id);
-  const idx = read<SessionMeta[]>(INDEX_KEY, []);
-  localStorage.setItem(INDEX_KEY, JSON.stringify(idx.filter((m) => m.id !== id)));
+export async function deleteSession(id: string): Promise<void> {
+  await del(id);
+  const idx = (await get<SessionMeta[]>(INDEX_KEY)) ?? [];
+  await put(INDEX_KEY, idx.filter((m) => m.id !== id));
 }
 
 export function newId(): string {

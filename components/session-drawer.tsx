@@ -17,7 +17,7 @@ export function SessionDrawer({
   const [sessions, setSessions] = useState<SessionMeta[]>([]);
 
   useEffect(() => {
-    if (open) setSessions(getIndex());
+    if (open) getIndex().then(setSessions);
   }, [open]);
 
   const create = () => {
@@ -30,9 +30,9 @@ export function SessionDrawer({
     onClose();
   };
 
-  const remove = (e: React.MouseEvent, id: string) => {
+  const remove = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    deleteSession(id);
+    await deleteSession(id);
     setSessions((prev) => prev.filter((s) => s.id !== id));
   };
 

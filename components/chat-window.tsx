@@ -29,10 +29,8 @@ function formatSize(bytes: number) {
 }
 
 export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantId: string }) {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = loadSession(sessionId);
-    return saved ? (saved.messages as Message[]) : [];
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
@@ -45,6 +43,17 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // load session from IndexedDB on mount
+  useEffect(() => {
+    let cancelled = false;
+    loadSession(sessionId).then((saved) => {
+      if (cancelled || !saved) { setLoaded(true); return; }
+      setMessages(saved.messages as Message[]);
+      setLoaded(true);
+    });
+    return () => { cancelled = true; };
+  }, [sessionId]);
+
   // ponytail: persist after each message change (debounced by React batching)
   useEffect(() => {
     if (messages.length === 0) return;
@@ -53,12 +62,14 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
       role: m.role,
       text: m.text,
       time: m.time,
-      file: m.file ? { name: m.file.name, type: m.file.type, size: m.file.size } : undefined,
+      file: m.file,
       charts: m.charts,
     }));
-    saveSession(sessionId, { messages: persisted });
     const lastUser = messages.filter((m) => m.role === 'user').at(-1);
-    upsertMeta(sessionId, lastUser?.text?.slice(0, 80) ?? '');
+    Promise.all([
+      saveSession(sessionId, { messages: persisted }),
+      upsertMeta(sessionId, lastUser?.text?.slice(0, 80) ?? ''),
+    ]).catch(() => {}); // ponytail: IndexedDB errors are non-critical for UX
   }, [messages, sessionId]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
