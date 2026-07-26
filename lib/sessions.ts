@@ -89,6 +89,8 @@ async function del(key: string): Promise<void> {
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
+const MAX_SESSIONS = 50;
+
 export async function getIndex(): Promise<SessionMeta[]> {
   const idx = await get<SessionMeta[]>(INDEX_KEY);
   return (idx ?? []).sort((a, b) => b.lastUpdate - a.lastUpdate);
@@ -101,6 +103,13 @@ export async function upsertMeta(id: string, preview: string): Promise<void> {
   if (i >= 0) {
     idx[i] = { id, lastUpdate: now, preview };
   } else {
+    // cap: evict least-recently-used session when at limit
+    if (idx.length >= MAX_SESSIONS) {
+      const oldest = idx.reduce((a, b) => (a.lastUpdate < b.lastUpdate ? a : b));
+      await del(oldest.id);
+      const oi = idx.findIndex((m) => m.id === oldest.id);
+      if (oi >= 0) idx.splice(oi, 1);
+    }
     idx.push({ id, lastUpdate: now, preview });
   }
   await put(INDEX_KEY, idx);
