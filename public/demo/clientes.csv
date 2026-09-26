@@ -1,0 +1,201 @@
+cliente_id,nome,segmento,regiao,canal_aquisicao,data_cadastro,meses_como_cliente,pedidos_total,receita_total,custo_atendimento,ticket_medio,tickets_suporte,nps,dias_desde_ultima_compra,churn
+CLI-001,Mercado Sao Jose,Grande,Sudeste,Meta Ads,2024-05-01,8,8,35814.45,476.05,4476.81,8,6,208,1
+CLI-002,Farmacia Sao Jose,Pequeno,Sudeste,Meta Ads,2022-05-31,31,20,12079.01,192.96,603.95,2,8,11,0
+CLI-003,Padaria Sao Jose,Medio,Centro-Oeste,Venda Direta,2020-05-31,55,38,78832.36,252.35,2074.54,4,7,51,0
+CLI-004,Restaurante Sao Jose,Pequeno,Centro-Oeste,Evento,2019-10-31,62,42,20896.85,240.64,497.54,4,6,387,1
+CLI-005,Loja Sao Jose,Medio,Sudeste,Meta Ads,2023-12-01,13,8,13782.37,313.45,1722.80,5,6,206,1
+CLI-006,Distribuidora Sao Jose,Medio,Nordeste,Meta Ads,2021-05-31,43,19,27454.17,643.59,1444.96,14,2,198,1
+CLI-007,Clinica Sao Jose,Medio,Sudeste,Meta Ads,2019-10-31,62,46,56726.27,253.83,1233.18,4,7,180,1
+CLI-008,Auto Pecas Sao Jose,Pequeno,Centro-Oeste,Venda Direta,2024-01-31,11,2,1939.66,208.31,969.83,4,6,80,0
+CLI-009,Supermercado Sao Jose,Medio,Norte,Evento,2021-05-01,44,22,50768.89,164.67,2307.68,1,8,28,0
+CLI-010,Boutique Sao Jose,Grande,Centro-Oeste,Google Ads,2020-07-31,53,58,347263.17,244.79,5987.30,5,6,362,1
+CLI-011,Pizzaria Sao Jose,Grande,Sudeste,Google Ads,2023-12-31,12,11,73198.57,571.47,6654.42,9,4,382,1
+CLI-012,Academia Sao Jose,Medio,Sudeste,Indicacao,2020-10-01,51,32,66857.49,159.80,2089.30,2,7,52,0
+CLI-013,Escritorio Sao Jose,Grande,Sul,Meta Ads,2023-07-01,18,13,39978.68,318.91,3075.28,4,7,216,1
+CLI-014,Hotel Sao Jose,Pequeno,Centro-Oeste,Google Ads,2021-08-31,40,25,9709.79,397.77,388.39,5,7,313,1
+CLI-015,Livraria Sao Jose,Pequeno,Sudeste,Google Ads,2021-01-31,47,12,8131.48,327.03,677.62,8,5,310,1
+CLI-016,Petshop Sao Jose,Medio,Sudeste,Evento,2021-12-31,36,17,40757.91,171.90,2397.52,2,6,34,0
+CLI-017,Barbearia Sao Jose,Medio,Nordeste,Meta Ads,2024-01-31,11,8,12919.06,356.30,1614.88,5,5,328,1
+CLI-018,Otica Sao Jose,Pequeno,Sudeste,Meta Ads,2019-10-01,63,38,13286.78,52.34,349.65,0,8,245,1
+CLI-019,Confeitaria Sao Jose,Medio,Centro-Oeste,Indicacao,2021-03-31,45,40,87207.80,381.93,2180.20,8,6,149,1
+CLI-020,Cafeteria Sao Jose,Pequeno,Sudeste,Google Ads,2020-07-31,53,27,12993.42,424.69,481.24,8,5,126,1
+CLI-021,Mercado Central,Pequeno,Norte,Google Ads,2024-03-02,10,2,1333.94,103.37,666.97,0,8,29,0
+CLI-022,Farmacia Central,Pequeno,Sul,Venda Direta,2020-07-01,54,29,24626.70,229.33,849.20,4,7,25,0
+CLI-023,Padaria Central,Medio,Norte,Google Ads,2023-03-31,21,10,13746.71,124.39,1374.67,2,8,34,0
+CLI-024,Restaurante Central,Grande,Sul,Google Ads,2024-01-31,11,8,89757.03,381.91,11219.63,8,6,300,1
+CLI-025,Loja Central,Pequeno,Sudeste,Google Ads,2020-12-31,48,17,14765.00,83.61,868.53,1,7,23,0
+CLI-026,Distribuidora Central,Pequeno,Sul,Indicacao,2021-12-31,36,7,6228.62,159.25,889.80,1,7,70,0
+CLI-027,Clinica Central,Pequeno,Sudeste,Google Ads,2018-12-31,72,24,15907.96,147.58,662.83,2,7,205,1
+CLI-028,Auto Pecas Central,Pequeno,Centro-Oeste,Indicacao,2020-07-31,53,26,16247.21,436.64,624.89,12,4,342,1
+CLI-029,Supermercado Central,Medio,Sul,Venda Direta,2023-01-31,23,15,23318.35,155.66,1554.56,4,7,187,1
+CLI-030,Boutique Central,Grande,Centro-Oeste,Indicacao,2021-10-01,39,30,172970.44,506.47,5765.68,9,4,36,0
+CLI-031,Pizzaria Central,Pequeno,Sul,Venda Direta,2020-05-01,56,22,17965.22,135.77,816.60,1,8,57,0
+CLI-032,Academia Central,Grande,Sudeste,Indicacao,2022-07-01,30,35,264966.44,578.05,7570.47,9,6,172,1
+CLI-033,Escritorio Central,Grande,Norte,Meta Ads,2021-03-03,46,40,183025.62,233.35,4575.64,8,4,213,1
+CLI-034,Hotel Central,Pequeno,Sudeste,Indicacao,2022-01-31,35,9,8501.74,222.52,944.64,3,7,26,0
+CLI-035,Livraria Central,Medio,Norte,Indicacao,2022-03-31,33,16,35747.44,146.01,2234.22,3,6,326,1
+CLI-036,Petshop Central,Pequeno,Sul,Google Ads,2021-12-01,37,17,7302.23,246.51,429.54,4,6,32,0
+CLI-037,Barbearia Central,Pequeno,Sudeste,Google Ads,2023-10-31,14,4,3436.94,329.80,859.24,9,5,147,1
+CLI-038,Otica Central,Pequeno,Sul,Venda Direta,2020-07-31,53,24,13551.63,126.12,564.65,1,8,51,0
+CLI-039,Confeitaria Central,Pequeno,Sudeste,Meta Ads,2021-12-31,36,14,3769.12,287.73,269.22,5,6,63,0
+CLI-040,Cafeteria Central,Grande,Centro-Oeste,Indicacao,2022-05-31,31,29,233457.30,419.54,8050.25,8,4,67,0
+CLI-041,Mercado do Vale,Pequeno,Nordeste,Venda Direta,2021-05-31,43,25,12174.09,164.00,486.96,4,7,364,1
+CLI-042,Farmacia do Vale,Medio,Centro-Oeste,Evento,2021-12-01,37,21,55647.20,173.32,2649.87,2,8,58,0
+CLI-043,Padaria do Vale,Pequeno,Sudeste,Venda Direta,2022-05-31,31,21,8563.77,283.51,407.80,5,7,11,0
+CLI-044,Restaurante do Vale,Medio,Nordeste,Evento,2023-03-31,21,16,43973.61,214.96,2748.35,3,8,33,0
+CLI-045,Loja do Vale,Pequeno,Nordeste,Google Ads,2024-08-31,4,1,896.32,81.07,896.32,1,7,59,0
+CLI-046,Distribuidora do Vale,Pequeno,Norte,Meta Ads,2021-07-31,41,23,11371.50,307.09,494.41,5,7,210,1
+CLI-047,Clinica do Vale,Pequeno,Norte,Google Ads,2022-07-31,29,10,3339.35,704.82,333.93,12,4,269,1
+CLI-048,Auto Pecas do Vale,Medio,Nordeste,Google Ads,2021-07-01,42,20,46334.97,371.39,2316.75,5,7,137,1
+CLI-049,Supermercado do Vale,Medio,Nordeste,Meta Ads,2024-10-01,3,2,4259.59,34.86,2129.80,0,8,27,0
+CLI-050,Boutique do Vale,Medio,Centro-Oeste,Indicacao,2019-01-31,71,44,56908.64,243.22,1293.38,6,6,209,1
+CLI-051,Pizzaria do Vale,Pequeno,Sudeste,Google Ads,2020-01-31,59,17,6160.81,105.57,362.40,1,8,52,0
+CLI-052,Academia do Vale,Pequeno,Sul,Google Ads,2020-08-31,52,22,18783.95,179.55,853.82,4,6,1,0
+CLI-053,Escritorio do Vale,Medio,Sudeste,Google Ads,2021-05-31,43,17,40358.80,210.79,2374.05,4,7,308,1
+CLI-054,Hotel do Vale,Pequeno,Sudeste,Evento,2019-01-31,71,28,18614.52,412.23,664.80,6,6,54,0
+CLI-055,Livraria do Vale,Pequeno,Sudeste,Meta Ads,2020-05-31,55,24,6453.30,265.10,268.89,5,7,10,0
+CLI-056,Petshop do Vale,Grande,Centro-Oeste,Google Ads,2023-10-01,15,9,93970.17,438.06,10441.13,7,6,16,0
+CLI-057,Barbearia do Vale,Grande,Sudeste,Google Ads,2019-03-03,70,64,614850.59,945.20,9607.04,17,1,384,1
+CLI-058,Otica do Vale,Medio,Sudeste,Evento,2022-03-31,33,29,31421.71,152.41,1083.51,4,7,70,0
+CLI-059,Confeitaria do Vale,Grande,Norte,Venda Direta,2023-07-01,18,14,137411.75,296.79,9815.13,4,6,57,0
+CLI-060,Cafeteria do Vale,Pequeno,Norte,Google Ads,2022-03-31,33,20,14745.28,167.39,737.26,3,7,85,0
+CLI-061,Mercado Primavera,Pequeno,Nordeste,Indicacao,2021-01-31,47,13,4518.24,142.95,347.56,2,7,38,0
+CLI-062,Farmacia Primavera,Medio,Nordeste,Indicacao,2023-07-31,17,10,34829.70,113.71,3482.97,1,8,38,0
+CLI-063,Padaria Primavera,Medio,Centro-Oeste,Indicacao,2020-03-31,57,37,69397.33,94.79,1875.60,0,8,8,0
+CLI-064,Restaurante Primavera,Grande,Sul,Google Ads,2024-10-01,3,2,17715.32,421.28,8857.66,7,4,356,1
+CLI-065,Loja Primavera,Pequeno,Norte,Google Ads,2021-03-03,46,30,16369.49,229.13,545.65,5,5,56,0
+CLI-066,Distribuidora Primavera,Pequeno,Sudeste,Meta Ads,2021-10-01,39,8,5237.87,378.11,654.73,6,5,64,0
+CLI-067,Clinica Primavera,Grande,Centro-Oeste,Venda Direta,2021-10-31,38,38,294684.50,386.51,7754.86,6,5,297,1
+CLI-068,Auto Pecas Primavera,Pequeno,Sudeste,Venda Direta,2023-08-31,16,10,8284.81,123.94,828.48,2,8,22,0
+CLI-069,Supermercado Primavera,Pequeno,Sul,Indicacao,2022-10-01,27,17,16335.66,158.62,960.92,3,6,357,1
+CLI-070,Boutique Primavera,Medio,Centro-Oeste,Meta Ads,2020-07-01,54,45,116816.46,163.77,2595.92,2,7,288,1
+CLI-071,Pizzaria Primavera,Medio,Sudeste,Google Ads,2022-03-31,33,25,66779.38,646.60,2671.18,10,4,72,0
+CLI-072,Academia Primavera,Grande,Norte,Indicacao,2020-03-31,57,66,844027.43,252.40,12788.29,5,6,36,0
+CLI-073,Escritorio Primavera,Pequeno,Norte,Evento,2019-01-31,71,32,19062.95,331.35,595.72,4,6,40,0
+CLI-074,Hotel Primavera,Medio,Centro-Oeste,Indicacao,2019-10-01,63,28,41912.53,156.09,1496.88,2,6,10,0
+CLI-075,Livraria Primavera,Grande,Sudeste,Indicacao,2023-05-01,20,23,293008.30,407.20,12739.49,7,5,82,0
+CLI-076,Petshop Primavera,Medio,Sudeste,Indicacao,2024-03-31,9,6,19054.93,187.20,3175.82,2,6,30,0
+CLI-077,Barbearia Primavera,Pequeno,Sul,Venda Direta,2024-05-01,8,3,1424.60,106.25,474.87,0,9,86,0
+CLI-078,Otica Primavera,Grande,Sul,Indicacao,2023-03-31,21,20,223854.14,596.34,11192.71,9,4,82,0
+CLI-079,Confeitaria Primavera,Grande,Sudeste,Evento,2019-10-31,62,39,350892.48,366.40,8997.24,7,5,53,0
+CLI-080,Cafeteria Primavera,Medio,Sudeste,Indicacao,2022-03-31,33,19,54749.43,190.23,2881.55,3,7,18,0
+CLI-081,Mercado Modelo,Grande,Sudeste,Meta Ads,2021-03-31,45,39,261703.90,532.68,6710.36,18,2,178,1
+CLI-082,Farmacia Modelo,Pequeno,Centro-Oeste,Indicacao,2018-12-31,72,41,51814.86,346.48,1263.78,5,6,376,1
+CLI-083,Padaria Modelo,Pequeno,Nordeste,Indicacao,2022-03-31,33,17,14523.43,237.86,854.32,5,5,89,0
+CLI-084,Restaurante Modelo,Pequeno,Sul,Meta Ads,2022-10-31,26,8,3332.62,300.05,416.58,6,6,88,0
+CLI-085,Loja Modelo,Pequeno,Centro-Oeste,Meta Ads,2023-10-01,15,7,2299.32,138.37,328.47,2,7,381,1
+CLI-086,Distribuidora Modelo,Pequeno,Nordeste,Venda Direta,2023-12-31,12,4,1307.20,180.40,326.80,4,7,287,1
+CLI-087,Clinica Modelo,Pequeno,Centro-Oeste,Google Ads,2020-01-31,59,40,25680.82,109.72,642.02,0,7,19,0
+CLI-088,Auto Pecas Modelo,Pequeno,Sudeste,Evento,2019-03-31,69,29,20048.16,598.57,691.32,9,5,400,1
+CLI-089,Supermercado Modelo,Pequeno,Sudeste,Evento,2024-08-31,4,3,2123.20,175.67,707.73,3,7,38,0
+CLI-090,Boutique Modelo,Pequeno,Sul,Indicacao,2021-08-31,40,13,11471.97,146.21,882.46,2,7,74,0
+CLI-091,Pizzaria Modelo,Grande,Sul,Indicacao,2022-05-01,32,32,498445.57,234.35,15576.42,5,7,74,0
+CLI-092,Academia Modelo,Pequeno,Sul,Meta Ads,2023-03-31,21,7,3542.36,57.18,506.05,0,9,206,1
+CLI-093,Escritorio Modelo,Pequeno,Sudeste,Google Ads,2019-01-31,71,21,13404.89,156.88,638.33,3,8,21,0
+CLI-094,Hotel Modelo,Pequeno,Centro-Oeste,Venda Direta,2023-12-31,12,7,5530.91,135.80,790.13,1,7,362,1
+CLI-095,Livraria Modelo,Pequeno,Nordeste,Meta Ads,2023-08-31,16,9,5961.70,409.63,662.41,6,6,63,0
+CLI-096,Petshop Modelo,Pequeno,Sudeste,Google Ads,2024-10-01,3,1,524.28,231.20,524.28,5,6,67,0
+CLI-097,Barbearia Modelo,Medio,Sudeste,Google Ads,2023-03-03,22,12,28181.89,161.15,2348.49,1,8,40,0
+CLI-098,Otica Modelo,Pequeno,Sudeste,Indicacao,2022-10-31,26,15,6186.28,283.05,412.42,5,5,37,0
+CLI-099,Confeitaria Modelo,Medio,Sul,Google Ads,2019-07-01,66,54,61105.12,188.21,1131.58,4,7,268,1
+CLI-100,Cafeteria Modelo,Pequeno,Sudeste,Meta Ads,2019-12-01,61,18,8000.63,258.76,444.48,4,7,140,1
+CLI-101,Mercado Boa Vista,Pequeno,Sudeste,Venda Direta,2020-03-31,57,17,16357.64,340.38,962.21,9,4,356,1
+CLI-102,Farmacia Boa Vista,Grande,Sul,Meta Ads,2020-12-01,49,40,256170.85,277.60,6404.27,4,7,256,1
+CLI-103,Padaria Boa Vista,Grande,Sudeste,Indicacao,2023-03-31,21,14,187826.93,419.89,13416.21,6,5,3,0
+CLI-104,Restaurante Boa Vista,Medio,Sudeste,Meta Ads,2020-10-01,51,24,51796.60,177.11,2158.19,4,6,15,0
+CLI-105,Loja Boa Vista,Pequeno,Sul,Indicacao,2020-07-01,54,24,24758.46,396.40,1031.60,9,5,1,0
+CLI-106,Distribuidora Boa Vista,Grande,Nordeste,Google Ads,2019-07-31,65,74,357626.94,341.04,4832.80,8,5,225,1
+CLI-107,Clinica Boa Vista,Pequeno,Sudeste,Indicacao,2024-07-01,6,2,1259.74,456.37,629.87,13,2,268,1
+CLI-108,Auto Pecas Boa Vista,Medio,Nordeste,Indicacao,2024-01-31,11,7,9488.82,269.12,1355.55,3,7,10,0
+CLI-109,Supermercado Boa Vista,Pequeno,Nordeste,Evento,2020-10-01,51,35,19881.79,208.62,568.05,3,7,5,0
+CLI-110,Boutique Boa Vista,Pequeno,Sul,Meta Ads,2021-05-31,43,27,10327.29,323.10,382.49,5,6,49,0
+CLI-111,Pizzaria Boa Vista,Pequeno,Sudeste,Indicacao,2024-08-31,4,3,3364.83,268.53,1121.61,4,6,65,0
+CLI-112,Academia Boa Vista,Medio,Sul,Indicacao,2020-03-02,58,30,44920.38,131.59,1497.35,2,8,23,0
+CLI-113,Escritorio Boa Vista,Medio,Sul,Meta Ads,2021-12-01,37,28,40983.89,109.16,1463.71,1,7,84,0
+CLI-114,Hotel Boa Vista,Medio,Nordeste,Indicacao,2019-01-31,71,50,169264.76,140.30,3385.30,3,6,23,0
+CLI-115,Livraria Boa Vista,Grande,Sudeste,Meta Ads,2021-07-31,41,25,187439.16,272.48,7497.57,6,7,40,0
+CLI-116,Petshop Boa Vista,Pequeno,Sul,Meta Ads,2018-12-31,72,25,14087.79,373.22,563.51,5,7,59,0
+CLI-117,Barbearia Boa Vista,Medio,Nordeste,Google Ads,2020-10-31,50,23,68561.92,196.38,2980.95,6,5,34,0
+CLI-118,Otica Boa Vista,Medio,Sudeste,Venda Direta,2019-07-01,66,45,64462.09,299.81,1432.49,4,6,18,0
+CLI-119,Confeitaria Boa Vista,Medio,Sul,Indicacao,2021-10-01,39,34,105115.81,157.59,3091.64,3,7,61,0
+CLI-120,Cafeteria Boa Vista,Grande,Centro-Oeste,Meta Ads,2023-01-31,23,19,90760.29,383.60,4776.86,10,3,320,1
+CLI-121,Mercado Ipiranga,Medio,Norte,Venda Direta,2021-05-31,43,37,56631.63,92.90,1530.58,0,8,227,1
+CLI-122,Farmacia Ipiranga,Medio,Sul,Google Ads,2019-08-31,64,46,122123.23,233.16,2654.85,5,7,42,0
+CLI-123,Padaria Ipiranga,Grande,Nordeste,Indicacao,2019-03-31,69,66,450023.40,491.16,6818.54,14,2,198,1
+CLI-124,Restaurante Ipiranga,Grande,Sudeste,Google Ads,2023-10-31,14,15,112590.99,703.62,7506.07,14,3,157,1
+CLI-125,Loja Ipiranga,Pequeno,Sudeste,Meta Ads,2024-03-02,10,6,4248.85,115.41,708.14,1,7,41,0
+CLI-126,Distribuidora Ipiranga,Pequeno,Centro-Oeste,Google Ads,2020-12-01,49,15,4232.28,188.21,282.15,2,7,358,1
+CLI-127,Clinica Ipiranga,Pequeno,Nordeste,Google Ads,2022-08-31,28,9,5155.61,291.02,572.85,6,6,390,1
+CLI-128,Auto Pecas Ipiranga,Grande,Sudeste,Indicacao,2022-10-01,27,27,191712.19,253.49,7100.45,4,7,380,1
+CLI-129,Supermercado Ipiranga,Medio,Sudeste,Google Ads,2021-10-31,38,25,23440.04,208.64,937.60,2,8,6,0
+CLI-130,Boutique Ipiranga,Medio,Sul,Venda Direta,2023-08-31,16,14,18681.99,239.39,1334.43,4,6,234,1
+CLI-131,Pizzaria Ipiranga,Medio,Nordeste,Meta Ads,2024-03-02,10,6,10711.26,197.49,1785.21,5,6,35,0
+CLI-132,Academia Ipiranga,Pequeno,Sudeste,Venda Direta,2024-07-01,6,2,947.55,249.90,473.78,4,7,210,1
+CLI-133,Escritorio Ipiranga,Pequeno,Nordeste,Google Ads,2022-12-01,25,8,2956.70,318.06,369.59,5,6,396,1
+CLI-134,Hotel Ipiranga,Medio,Sul,Indicacao,2023-12-01,13,8,31139.43,502.84,3892.43,11,3,361,1
+CLI-135,Livraria Ipiranga,Pequeno,Centro-Oeste,Meta Ads,2020-03-31,57,36,9750.49,160.83,270.85,2,7,195,1
+CLI-136,Petshop Ipiranga,Pequeno,Sudeste,Google Ads,2019-01-31,71,34,15912.31,166.79,468.01,4,6,393,1
+CLI-137,Barbearia Ipiranga,Grande,Centro-Oeste,Google Ads,2022-01-31,35,27,192980.89,281.16,7147.44,9,5,270,1
+CLI-138,Otica Ipiranga,Pequeno,Centro-Oeste,Indicacao,2021-10-31,38,25,17615.81,232.55,704.63,5,7,10,0
+CLI-139,Confeitaria Ipiranga,Medio,Sudeste,Google Ads,2020-10-31,50,34,49142.69,285.63,1445.37,8,5,130,1
+CLI-140,Cafeteria Ipiranga,Pequeno,Nordeste,Google Ads,2022-07-01,30,21,10718.30,331.30,510.40,5,6,194,1
+CLI-141,Mercado da Praia,Pequeno,Sudeste,Indicacao,2022-05-01,32,8,4941.74,167.34,617.72,4,6,50,0
+CLI-142,Farmacia da Praia,Medio,Norte,Google Ads,2019-07-31,65,32,77574.81,174.87,2424.21,4,6,58,0
+CLI-143,Padaria da Praia,Pequeno,Sul,Venda Direta,2024-03-02,10,2,1864.02,317.45,932.01,6,6,88,0
+CLI-144,Restaurante da Praia,Pequeno,Sudeste,Google Ads,2023-10-01,15,8,5728.37,141.73,716.05,2,8,48,0
+CLI-145,Loja da Praia,Grande,Sul,Evento,2023-05-31,19,20,224618.14,436.98,11230.91,10,4,69,0
+CLI-146,Distribuidora da Praia,Pequeno,Sul,Google Ads,2022-01-31,35,16,12493.50,343.16,780.84,6,6,240,1
+CLI-147,Clinica da Praia,Pequeno,Sudeste,Meta Ads,2023-07-31,17,8,2491.77,121.72,311.47,1,6,13,0
+CLI-148,Auto Pecas da Praia,Medio,Nordeste,Venda Direta,2020-05-31,55,45,123682.58,198.49,2748.50,4,7,67,0
+CLI-149,Supermercado da Praia,Pequeno,Sul,Venda Direta,2021-01-31,47,23,9974.91,545.35,433.69,11,5,189,1
+CLI-150,Boutique da Praia,Medio,Sudeste,Indicacao,2024-08-31,4,3,6025.24,142.64,2008.41,2,6,76,0
+CLI-151,Pizzaria da Praia,Pequeno,Nordeste,Indicacao,2020-12-31,48,26,20942.64,239.83,805.49,4,7,55,0
+CLI-152,Academia da Praia,Pequeno,Norte,Meta Ads,2019-03-03,70,18,7241.12,193.56,402.28,2,7,30,0
+CLI-153,Escritorio da Praia,Medio,Nordeste,Indicacao,2023-07-31,17,14,24665.85,105.96,1761.85,1,7,57,0
+CLI-154,Hotel da Praia,Medio,Sudeste,Google Ads,2023-12-31,12,5,5286.93,263.32,1057.39,4,7,36,0
+CLI-155,Livraria da Praia,Medio,Sudeste,Evento,2019-12-31,60,49,120227.15,115.10,2453.62,1,7,35,0
+CLI-156,Petshop da Praia,Pequeno,Centro-Oeste,Indicacao,2021-01-31,47,19,24671.79,295.33,1298.52,4,7,331,1
+CLI-157,Barbearia da Praia,Medio,Sudeste,Google Ads,2023-08-31,16,14,16862.95,198.58,1204.50,3,6,40,0
+CLI-158,Otica da Praia,Medio,Sul,Indicacao,2021-07-01,42,36,103651.41,93.99,2879.21,2,8,31,0
+CLI-159,Confeitaria da Praia,Pequeno,Sudeste,Indicacao,2023-10-01,15,4,2617.74,449.46,654.43,11,5,148,1
+CLI-160,Cafeteria da Praia,Grande,Nordeste,Meta Ads,2021-01-31,47,29,197139.48,383.04,6797.91,9,4,196,1
+CLI-161,Mercado do Norte,Medio,Sul,Evento,2018-12-31,72,54,98584.14,54.01,1825.63,0,7,365,1
+CLI-162,Farmacia do Norte,Medio,Sudeste,Meta Ads,2019-10-31,62,49,63911.27,155.36,1304.31,2,6,7,0
+CLI-163,Padaria do Norte,Pequeno,Sudeste,Meta Ads,2021-07-01,42,24,14769.33,212.18,615.39,6,5,88,0
+CLI-164,Restaurante do Norte,Pequeno,Sudeste,Indicacao,2021-10-01,39,22,11473.34,434.86,521.52,8,6,205,1
+CLI-165,Loja do Norte,Pequeno,Sul,Evento,2021-01-31,47,24,21576.98,146.24,899.04,1,8,31,0
+CLI-166,Distribuidora do Norte,Pequeno,Sudeste,Meta Ads,2022-07-31,29,6,3691.51,230.36,615.25,4,6,204,1
+CLI-167,Clinica do Norte,Medio,Sudeste,Venda Direta,2021-07-01,42,28,35136.63,378.22,1254.88,5,6,63,0
+CLI-168,Auto Pecas do Norte,Medio,Centro-Oeste,Venda Direta,2019-10-31,62,52,153414.12,115.91,2950.27,3,8,235,1
+CLI-169,Supermercado do Norte,Medio,Centro-Oeste,Evento,2020-01-31,59,48,60476.08,225.94,1259.92,3,7,309,1
+CLI-170,Boutique do Norte,Pequeno,Sudeste,Indicacao,2021-12-01,37,24,9035.89,236.07,376.50,4,7,65,0
+CLI-171,Pizzaria do Norte,Pequeno,Centro-Oeste,Evento,2022-12-31,24,14,3566.64,175.05,254.76,2,8,17,0
+CLI-172,Academia do Norte,Grande,Sudeste,Google Ads,2022-05-01,32,38,404704.21,261.02,10650.11,6,5,59,0
+CLI-173,Escritorio do Norte,Medio,Sudeste,Indicacao,2021-10-01,39,28,48882.39,131.42,1745.80,1,7,36,0
+CLI-174,Hotel do Norte,Pequeno,Sudeste,Meta Ads,2023-05-31,19,12,6105.08,275.24,508.76,3,7,8,0
+CLI-175,Livraria do Norte,Medio,Nordeste,Meta Ads,2019-08-31,64,48,37514.57,133.75,781.55,1,7,74,0
+CLI-176,Petshop do Norte,Medio,Nordeste,Google Ads,2021-05-31,43,25,44731.77,353.93,1789.27,9,4,30,0
+CLI-177,Barbearia do Norte,Medio,Sudeste,Indicacao,2023-03-31,21,13,53922.97,194.41,4147.92,3,6,46,0
+CLI-178,Otica do Norte,Pequeno,Centro-Oeste,Evento,2021-10-01,39,20,20175.42,74.52,1008.77,0,8,88,0
+CLI-179,Confeitaria do Norte,Pequeno,Nordeste,Google Ads,2021-01-31,47,11,7819.85,212.74,710.90,5,5,25,0
+CLI-180,Cafeteria do Norte,Pequeno,Centro-Oeste,Indicacao,2022-12-01,25,11,11410.13,594.02,1037.28,10,3,139,1
+CLI-181,Mercado Aurora,Pequeno,Norte,Venda Direta,2022-03-03,34,7,3097.62,204.28,442.52,3,7,34,0
+CLI-182,Farmacia Aurora,Pequeno,Nordeste,Google Ads,2023-12-01,13,5,4133.79,613.72,826.76,12,3,70,0
+CLI-183,Padaria Aurora,Medio,Nordeste,Indicacao,2024-03-31,9,5,6592.17,384.92,1318.43,6,6,195,1
+CLI-184,Restaurante Aurora,Pequeno,Sul,Google Ads,2020-08-31,52,31,18714.17,180.51,603.68,4,7,18,0
+CLI-185,Loja Aurora,Pequeno,Centro-Oeste,Indicacao,2021-12-01,37,8,3640.81,338.00,455.10,5,6,62,0
+CLI-186,Distribuidora Aurora,Medio,Sul,Meta Ads,2023-12-01,13,6,9394.76,243.05,1565.79,4,6,268,1
+CLI-187,Clinica Aurora,Pequeno,Sul,Indicacao,2024-01-31,11,4,3722.24,185.49,930.56,4,7,74,0
+CLI-188,Auto Pecas Aurora,Pequeno,Nordeste,Indicacao,2020-12-31,48,20,18911.86,102.16,945.59,1,7,17,0
+CLI-189,Supermercado Aurora,Medio,Norte,Venda Direta,2021-08-31,40,22,28966.28,136.33,1316.65,2,7,350,1
+CLI-190,Boutique Aurora,Pequeno,Sudeste,Meta Ads,2024-07-01,6,2,483.01,639.41,241.50,9,5,241,1
+CLI-191,Pizzaria Aurora,Pequeno,Nordeste,Indicacao,2023-07-01,18,5,2788.49,154.45,557.70,1,8,9,0
+CLI-192,Academia Aurora,Pequeno,Sul,Venda Direta,2022-05-01,32,20,12776.98,265.85,638.85,5,5,72,0
+CLI-193,Escritorio Aurora,Medio,Nordeste,Google Ads,2021-03-03,46,38,36282.84,239.39,954.81,4,7,306,1
+CLI-194,Hotel Aurora,Pequeno,Sul,Evento,2022-07-01,30,14,8062.81,192.88,575.91,2,7,11,0
+CLI-195,Livraria Aurora,Pequeno,Sudeste,Indicacao,2019-05-01,68,35,19640.09,159.16,561.15,2,6,82,0
+CLI-196,Petshop Aurora,Pequeno,Sul,Google Ads,2023-10-01,15,9,6421.76,294.55,713.53,5,6,23,0
+CLI-197,Barbearia Aurora,Medio,Sul,Evento,2021-07-01,42,26,51425.95,304.03,1977.92,4,6,76,0
+CLI-198,Otica Aurora,Pequeno,Sudeste,Indicacao,2021-03-03,46,12,14392.23,258.63,1199.35,5,5,259,1
+CLI-199,Confeitaria Aurora,Pequeno,Centro-Oeste,Indicacao,2020-07-31,53,25,13874.00,292.91,554.96,6,6,16,0
+CLI-200,Cafeteria Aurora,Medio,Sudeste,Google Ads,2022-08-31,28,21,28300.38,215.45,1347.64,4,6,20,0
