@@ -28,12 +28,62 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+interface DemoDataset {
+  file: string;
+  emoji: string;
+  title: string;
+  description: string;
+  question: string;
+}
+
+// Datasets fictícios em public/demo/. O CSV é buscado e encaixado no mesmo fluxo
+// de upload — nunca vai pra IA, só pro contexto das tools.
+const DEMO_DATASETS: DemoDataset[] = [
+  {
+    file: 'vendas.csv',
+    emoji: '📈',
+    title: 'Vendas & Lucro',
+    description: 'Pedidos do ano com receita, custo e lucro por produto, canal e cliente.',
+    question: 'Analise estes dados de vendas e me mostre os principais insights para aumentar o lucro.',
+  },
+  {
+    file: 'marketing.csv',
+    emoji: '📣',
+    title: 'Marketing & ROI',
+    description: 'Investimento e retorno de cada canal e campanha.',
+    question: 'Analise o retorno de cada canal de marketing e me diga onde devo investir mais e onde devo cortar.',
+  },
+  {
+    file: 'producao.csv',
+    emoji: '🏭',
+    title: 'Produção & Desperdício',
+    description: 'Produção por linha e turno com refugo e horas paradas.',
+    question: 'Analise a produção e me mostre onde estou perdendo mais com desperdício e paradas de máquina.',
+  },
+  {
+    file: 'clientes.csv',
+    emoji: '👥',
+    title: 'Clientes & Churn',
+    description: 'Base de clientes com LTV, NPS, suporte e churn.',
+    question: 'Analise minha base de clientes e me mostre como reduzir o churn e reter os melhores clientes.',
+  },
+];
+
+// base64 do conteúdo UTF-8, igual ao que o FileReader produz num upload real
+function toBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
 export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -160,6 +210,32 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     }
   };
 
+  // envia uma mensagem já montada pelo mesmo fluxo (upload incluso)
+  const runChat = async (userMsg: Message) => {
+    setStreaming(true);
+
+    const history = [...messages, userMsg].map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.text,
+    }));
+
+    const allFiles = [userMsg, ...messages]
+      .filter((m) => m.file)
+      .map((m) => m.file!);
+
+    try {
+      await streamChat(history, allFiles.length > 0 ? allFiles : undefined);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'stream error';
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now(), role: 'assistant', text: `Error: ${msg}`, time: now() },
+      ]);
+    } finally {
+      setStreaming(false);
+    }
+  };
+
   const send = async (e: FormEvent) => {
     e.preventDefault();
     const text = input.trim();
@@ -191,27 +267,45 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
-    setStreaming(true);
+    await runChat(userMsg);
+  };
 
-    const history = [...messages, userMsg].map((m) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.text,
-    }));
+  const handleDemoClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const demo = DEMO_DATASETS.find((d) => d.file === e.currentTarget.dataset.file);
+    if (demo) void loadDemo(demo);
+  };
 
-    const allFiles = [userMsg, ...messages]
-      .filter((m) => m.file)
-      .map((m) => m.file!);
-
+  // simula um upload: busca o CSV de exemplo e o envia pelo mesmo caminho
+  const loadDemo = async (demo: DemoDataset) => {
+    if (streaming || demoLoading) return;
+    setDemoLoading(demo.file);
     try {
-      await streamChat(history, allFiles.length > 0 ? allFiles : undefined);
+      const res = await fetch(`/demo/${demo.file}`);
+      if (!res.ok) throw new Error(`não encontrei ${demo.file}`);
+      const text = await res.text();
+      const file: UploadedFile = {
+        name: demo.file,
+        type: 'text/csv',
+        size: new TextEncoder().encode(text).length,
+        data: toBase64(text),
+      };
+      const userMsg: Message = {
+        id: Date.now(),
+        role: 'user',
+        text: demo.question,
+        time: now(),
+        file,
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      await runChat(userMsg);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'stream error';
+      const msg = err instanceof Error ? err.message : 'erro desconhecido';
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), role: 'assistant', text: `Error: ${msg}`, time: now() },
+        { id: Date.now(), role: 'assistant', text: `Erro ao carregar dados de exemplo: ${msg}`, time: now() },
       ]);
     } finally {
-      setStreaming(false);
+      setDemoLoading(null);
     }
   };
 
@@ -276,14 +370,51 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
         {/* messages */}
         <div className="relative z-10 flex-1 overflow-y-auto px-3 py-4 space-y-3">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 dark:from-indigo-500/15 dark:to-violet-500/15 flex items-center justify-center mb-4">
-                <svg viewBox="0 0 24 24" width="28" height="28" className="fill-indigo-500/60">
+            <div className="flex flex-col items-center justify-center min-h-full py-6 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 dark:from-indigo-500/15 dark:to-violet-500/15 flex items-center justify-center mb-3">
+                <svg viewBox="0 0 24 24" width="26" height="26" className="fill-indigo-500/60">
                   <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
                 </svg>
               </div>
-              <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs leading-relaxed">
-                Envie um arquivo CSV, Excel ou JSON para começar a analisar seus dados.
+              <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200">
+                Analise seus dados
+              </h2>
+              <p className="mt-1 text-sm text-slate-400 dark:text-slate-500 max-w-xs leading-relaxed">
+                Envie um arquivo CSV, Excel ou JSON — ou comece agora com um conjunto de exemplo.
+              </p>
+
+              <div className="mt-5 w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {DEMO_DATASETS.map((demo) => {
+                  const loading = demoLoading === demo.file;
+                  return (
+                    <button
+                      key={demo.file}
+                      type="button"
+                      data-file={demo.file}
+                      onClick={handleDemoClick}
+                      disabled={!!demoLoading || streaming}
+                      className="text-left glass rounded-2xl p-3 transition-all hover:-translate-y-0.5 hover:border-indigo-400/60 dark:hover:border-indigo-400/40 disabled:opacity-60"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg" aria-hidden>{demo.emoji}</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          {demo.title}
+                        </span>
+                        {loading && (
+                          <span className="ml-auto text-[11px] text-indigo-500 dark:text-indigo-400">
+                            carregando…
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 leading-snug">
+                        {demo.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-[11px] text-slate-400/80 dark:text-slate-600">
+                Dados fictícios só para demonstração.
               </p>
             </div>
           )}
