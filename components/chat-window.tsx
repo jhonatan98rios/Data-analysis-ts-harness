@@ -154,7 +154,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history, files, tenantId }),
+      body: JSON.stringify({ messages: history, files, tenantId, sessionId }),
       signal: controller.signal,
     });
 

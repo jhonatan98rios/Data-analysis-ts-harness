@@ -115,19 +115,24 @@ Use group_by, pareto, trend, etc. e passe o resultado direto pro \`plot\`.
   return prompt;
 }
 
+// ponytail: lidos uma vez por instância — usados no chat e no trace (provenance)
+export const MODEL_NAME = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
+// thinking enabled via model_kwargs, toggle with DEEPSEEK_THINKING=false
+export const THINKING_ENABLED = process.env.DEEPSEEK_THINKING !== 'false';
+export const TEMPERATURE = 0.7;
+
 function createDeepSeekChat(): ChatOpenAI {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) throw new Error('DEEPSEEK_API_KEY not set');
 
-  // ponytail: thinking enabled via model_kwargs, toggle with DEEPSEEK_THINKING=false
-  const enableThinking = process.env.DEEPSEEK_THINKING !== 'false';
+  const enableThinking = THINKING_ENABLED;
 
   return new ChatOpenAI({
-    modelName: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
+    modelName: MODEL_NAME,
     apiKey,
     configuration: { baseURL: DEEPSEEK_BASE_URL },
     streaming: true,
-    temperature: 0.7,
+    temperature: TEMPERATURE,
     modelKwargs: enableThinking ? { thinking: { type: 'enabled' } } : undefined,
   });
 }
@@ -138,6 +143,10 @@ export interface StreamToken {
   chart?: ChartSpec;
 }
 
+export interface StreamTrace {
+  messages: BaseMessage[];
+}
+
 // ponytail: max 5 tool-call loops, add config if needed
 const MAX_TOOL_LOOPS = 5;
 
@@ -145,6 +154,7 @@ export async function* streamResponse(
   messages: { role: 'user' | 'assistant'; content: string }[],
   files?: UploadedFile[],
   tools?: StructuredToolInterface[],
+  trace?: StreamTrace,
 ): AsyncGenerator<StreamToken> {
   const chatBase = createDeepSeekChat();
 
@@ -157,6 +167,10 @@ export async function* streamResponse(
       m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content),
     ),
   ];
+
+  // ponytail: o array é mutado in-place pelo loop — o trace lê o estado final
+  // depois do stream fechar, sem precisar de callback por turno.
+  if (trace) trace.messages = langchainMessages;
 
   // Agentic loop: invoke, check tool calls, execute, repeat
   for (let loop = 0; loop < MAX_TOOL_LOOPS; loop++) {
@@ -177,6 +191,8 @@ export async function* streamResponse(
         yield { type: 'thinking', text: reasoning };
       }
       if (text.length > 0) {
+        // resposta final entra na trajectory (com reasoning) antes de sair
+        langchainMessages.push(response);
         yield { type: 'token', text };
       }
       return;
@@ -244,10 +260,13 @@ export async function* streamResponse(
 
   // ponytail: fallback — max loops reached, stream whatever the model says now
   const finalStream = await chat.stream(langchainMessages);
+  let acc = '';
   for await (const chunk of finalStream) {
     const text = chunk.content;
     if (typeof text === 'string' && text.length > 0) {
+      acc += text;
       yield { type: 'token', text };
     }
   }
+  if (acc.length > 0) langchainMessages.push(new AIMessage(acc));
 }

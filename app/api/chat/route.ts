@@ -1,4 +1,6 @@
-import { streamResponse } from '@/lib/chat/stream';
+import { streamResponse, MODEL_NAME, TEMPERATURE, THINKING_ENABLED, type StreamTrace } from '@/lib/chat/stream';
+import { saveTrace } from '@/lib/trace';
+import { after } from 'next/server';
 import { parseAndStore } from '@/lib/data/store';
 import { createAggregateTool } from '@/lib/tools/aggregate';
 import { createProfileTool } from '@/lib/tools/profile';
@@ -10,7 +12,8 @@ import { createCountByGroupTool, createDescribeConditionalTool, createPivotTool 
 import { createPlotTool } from '@/lib/tools/plot';
 import { checkFiles, checkPromptInjection, sanitizeInput, checkMessageLength } from '@/lib/guardrails';
 
-export const runtime = 'edge';
+// ponytail: nodejs (não edge) porque o driver do MongoDB precisa de sockets TCP.
+export const runtime = 'nodejs';
 
 interface UploadedFile {
   name: string;
@@ -23,12 +26,14 @@ export async function POST(req: Request) {
   // ponytail: CORS — echo origin back or * when absent. Enforcement is in middleware.
   const origin = req.headers.get('origin');
   const acao: string = origin || '*';
+  const startedAt = Date.now();
 
   try {
     const body = (await req.json()) as {
       messages: { role: 'user' | 'assistant'; content: string }[];
       files?: UploadedFile[];
       tenantId?: string;
+      sessionId?: string;
     };
 
     if (!body.messages?.length) {
@@ -97,12 +102,17 @@ export async function POST(req: Request) {
 
     const encoder = new TextEncoder();
 
+    // ponytail: coletor mutável — o generator escreve a trajectory completa
+    // (system + tools + reasoning + tool calls + resposta) dentro dele.
+    const trace: StreamTrace = { messages: [] };
+    let traceError: string | null = null;
+
     const readable = new ReadableStream({
       async start(controller) {
         const enqueue = (data: Record<string, unknown>) =>
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         try {
-          for await (const st of streamResponse(body.messages, body.files, tools)) {
+          for await (const st of streamResponse(body.messages, body.files, tools, trace)) {
             if (st.type === 'chart' && st.chart) {
               enqueue({ chart: st.chart });
             } else if (st.type === 'thinking') {
@@ -115,11 +125,28 @@ export async function POST(req: Request) {
           controller.close();
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'stream error';
+          traceError = msg;
           enqueue({ error: msg });
           controller.close();
         }
       },
     });
+
+    // Roda depois do response fechar: não adiciona latência ao chat.
+    after(() =>
+      saveTrace({
+        trace,
+        sessionId: body.sessionId,
+        tenantId,
+        model: MODEL_NAME,
+        tools,
+        latencyMs: Date.now() - startedAt,
+        temperature: TEMPERATURE,
+        thinking: THINKING_ENABLED,
+        error: traceError,
+        source: 'web',
+      }),
+    );
 
     return new Response(readable, {
       headers: {
