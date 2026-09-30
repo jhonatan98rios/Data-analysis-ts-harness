@@ -115,7 +115,6 @@ function toBase64(str: string): string {
 
 export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
@@ -130,13 +129,14 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // load session from IndexedDB on mount
+  // load session from IndexedDB whenever the session changes.
+  // ponytail: sempre sobrescreve as mensagens (mesmo com []), senão a sessão nova
+  // herda mensagens/arquivos da anterior e o store do servidor fica com o dado antigo.
   useEffect(() => {
     let cancelled = false;
     loadSession(sessionId).then((saved) => {
-      if (cancelled || !saved) { setLoaded(true); return; }
-      setMessages(saved.messages as Message[]);
-      setLoaded(true);
+      if (cancelled) return;
+      setMessages(saved ? (saved.messages as Message[]) : []);
     });
     return () => { cancelled = true; };
   }, [sessionId]);
@@ -269,7 +269,10 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
       content: m.text,
     }));
 
-    const allFiles = [userMsg, ...messages]
+    // ordem cronológica: o último arquivo é o mais recente. O store do servidor
+    // guarda só um dataset por tenant (parseAndStore sobrescreve), então o mais
+    // novo precisa vir por último — senão um upload antigo vence o atual.
+    const allFiles = [...messages, userMsg]
       .filter((m) => m.file)
       .map((m) => m.file!);
 
