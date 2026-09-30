@@ -13,13 +13,13 @@ export function createCorrelationTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [column1, column2]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
@@ -32,7 +32,7 @@ export function createCorrelationTool(tenantId: string) {
       }
 
       if (pairs.length < 3) {
-        return `Poucos pares numéricos (${pairs.length}) para calcular correlação. São necessários ao menos 3.`;
+        return `Too few numeric pairs (${pairs.length}) to compute correlation. At least 3 are required.`;
       }
 
       const n = pairs.length;
@@ -52,13 +52,13 @@ export function createCorrelationTool(tenantId: string) {
       // Strength interpretation
       const absR = Math.abs(r);
       let strength: string;
-      if (absR >= 0.9) strength = 'muito forte';
-      else if (absR >= 0.7) strength = 'forte';
-      else if (absR >= 0.5) strength = 'moderada';
-      else if (absR >= 0.3) strength = 'fraca';
-      else strength = 'muito fraca ou inexistente';
+      if (absR >= 0.9) strength = 'very strong';
+      else if (absR >= 0.7) strength = 'strong';
+      else if (absR >= 0.5) strength = 'moderate';
+      else if (absR >= 0.3) strength = 'weak';
+      else strength = 'very weak or nonexistent';
 
-      const direction = r > 0 ? 'positiva' : r < 0 ? 'negativa' : 'neutra';
+      const direction = r > 0 ? 'positive' : r < 0 ? 'negative' : 'neutral';
 
       // Simple summary stats for context
       const xs = pairs.map(([x]) => x);
@@ -72,7 +72,7 @@ export function createCorrelationTool(tenantId: string) {
         pearsonR: r,
         strength,
         direction,
-        interpretation: `Correlação ${strength} e ${direction} (r = ${r}).`,
+        interpretation: `Correlation is ${strength} and ${direction} (r = ${r}).`,
         column1Summary: {
           min: Math.round(Math.min(...xs) * 100) / 100,
           max: Math.round(Math.max(...xs) * 100) / 100,
@@ -87,17 +87,17 @@ export function createCorrelationTool(tenantId: string) {
     },
     {
       name: 'correlation',
-      description: `Calcula a correlação de Pearson entre duas colunas numéricas. Retorna o coeficiente r (-1 a 1), a força e direção da correlação, e um resumo estatístico de cada coluna.
+      description: `Computes the Pearson correlation between two numeric columns. Returns the coefficient r (-1 to 1), the correlation strength and direction, and a statistical summary of each column.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Investir em marketing aumenta as vendas?"
-- "Existe relação entre preço e quantidade vendida?"
-- "Horas trabalhadas vs produtividade?"
-- "Duas variáveis estão relacionadas?"
-- Qualquer pergunta sobre relação entre duas métricas.`,
+⚠️ Use this tool when the user asks:
+- "Does investing in marketing increase sales?"
+- "Is there a relationship between price and quantity sold?"
+- "Hours worked vs productivity?"
+- "Are two variables related?"
+- Any question about the relationship between two metrics.`,
       schema: z.object({
-        column1: z.string().describe('Primeira coluna numérica (ex: "gasto_marketing", "preco")'),
-        column2: z.string().describe('Segunda coluna numérica (ex: "receita", "quantidade")'),
+        column1: z.string().describe('First numeric column (e.g. "marketing_spend", "price")'),
+        column2: z.string().describe('Second numeric column (e.g. "revenue", "quantity")'),
       }),
     },
   );
@@ -116,13 +116,13 @@ export function createRatioTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [numerator, denominator]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
@@ -136,7 +136,7 @@ export function createRatioTool(tenantId: string) {
       }
 
       if (ratios.length === 0) {
-        return 'Nenhuma razão válida calculada. Verifique se as colunas têm valores numéricos e o denominador não é zero.';
+        return 'No valid ratio computed. Check that the columns have numeric values and the denominator is not zero.';
       }
 
       ratios.sort((a, b) => a - b);
@@ -162,21 +162,21 @@ export function createRatioTool(tenantId: string) {
     },
     {
       name: 'ratio',
-      description: `Calcula a razão entre duas colunas numéricas (coluna1 / coluna2) para cada linha dos dados. Retorna min, max, média e mediana da razão.
+      description: `Computes the ratio between two numeric columns (column1 / column2) for each data row. Returns the min, max, average and median of the ratio.
 
-Útil para métricas de negócio como margem, ROI, taxa de conversão, ticket médio por cliente, etc.
+Useful for business metrics such as margin, ROI, conversion rate, average ticket per customer, etc.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Qual a margem de lucro?" (lucro / receita)
-- "Qual o ROI da campanha?" (retorno / investimento)
-- "Taxa de conversão?" (vendas / visitas)
-- "Ticket médio?" (receita / número de pedidos)
-- "Custo por lead/aquisição?"
-- Qualquer pergunta sobre proporção entre duas métricas.`,
+⚠️ Use this tool when the user asks:
+- "What is the profit margin?" (profit / revenue)
+- "What is the campaign ROI?" (return / investment)
+- "Conversion rate?" (sales / visits)
+- "Average ticket?" (revenue / number of orders)
+- "Cost per lead/acquisition?"
+- Any question about a proportion between two metrics.`,
       schema: z.object({
-        numerator: z.string().describe('Coluna do numerador (ex: "lucro", "retorno", "vendas")'),
-        denominator: z.string().describe('Coluna do denominador (ex: "receita", "investimento", "visitas")'),
-        label: z.string().optional().describe('Nome amigável para a razão (ex: "Margem de lucro", "ROI")'),
+        numerator: z.string().describe('Numerator column (e.g. "profit", "return", "sales")'),
+        denominator: z.string().describe('Denominator column (e.g. "revenue", "investment", "visits")'),
+        label: z.string().optional().describe('Friendly name for the ratio (e.g. "Profit margin", "ROI")'),
       }),
     },
   );

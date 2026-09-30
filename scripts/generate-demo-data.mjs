@@ -240,13 +240,29 @@ function genClientes() {
 }
 
 // ── run ────────────────────────────────────────────────────────────────────
+// Só o cabeçalho muda no en-us — os dados são idênticos.
+const EN_HEADERS = {
+  'vendas.csv': { data: 'date', mes: 'month', pedido_id: 'order_id', cliente: 'customer', canal: 'channel', regiao: 'region', vendedor: 'salesperson', categoria: 'category', produto: 'product', quantidade: 'quantity', preco_unitario: 'unit_price', desconto_pct: 'discount_pct', receita: 'revenue', custo_total: 'total_cost', lucro: 'profit' },
+  'marketing.csv': { data: 'date', mes: 'month', canal: 'channel', campanha: 'campaign', investimento: 'investment', impressoes: 'impressions', cliques: 'clicks', leads: 'leads', pedidos: 'orders', novos_clientes: 'new_customers', receita: 'revenue' },
+  'producao.csv': { data: 'date', mes: 'month', linha: 'line', turno: 'shift', produto: 'product', unidades_produzidas: 'units_produced', unidades_defeituosas: 'defective_units', horas_paradas: 'downtime_hours', energia_kwh: 'energy_kwh', custo_materia_prima: 'raw_material_cost', custo_mao_obra: 'labor_cost', custo_total: 'total_cost', valor_producao: 'production_value', custo_desperdicio: 'waste_cost' },
+  'clientes.csv': { cliente_id: 'customer_id', nome: 'name', segmento: 'segment', regiao: 'region', canal_aquisicao: 'acquisition_channel', data_cadastro: 'signup_date', meses_como_cliente: 'months_as_customer', pedidos_total: 'total_orders', receita_total: 'total_revenue', custo_atendimento: 'service_cost', ticket_medio: 'avg_ticket', tickets_suporte: 'support_tickets', nps: 'nps', dias_desde_ultima_compra: 'days_since_last_purchase', churn: 'churn' },
+};
+function translateHeader(content, map) {
+  const nl = content.indexOf('\n');
+  const header = content.slice(0, nl).split(',').map((h) => map[h] ?? h).join(',');
+  return header + content.slice(nl);
+}
+
 const files = {
   'vendas.csv': genVendas(),
   'marketing.csv': genMarketing(),
   'producao.csv': genProducao(),
   'clientes.csv': genClientes(),
 };
+const EN_OUT = join(OUT, 'en-us');
+mkdirSync(EN_OUT, { recursive: true });
 for (const [name, content] of Object.entries(files)) {
   writeFileSync(join(OUT, name), content, 'utf-8');
+  writeFileSync(join(EN_OUT, name), translateHeader(content, EN_HEADERS[name]), 'utf-8');
   console.log(`${name}: ${content.trim().split('\n').length - 1} linhas`);
 }

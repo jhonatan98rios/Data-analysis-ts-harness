@@ -8,6 +8,7 @@ import {
 } from '@langchain/core/messages';
 import type { StructuredToolInterface } from '@langchain/core/tools';
 import type { ChartSpec } from '@/lib/tools/plot';
+import { LANG_NAME, type Lang } from '@/lib/i18n';
 
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com/v1';
 
@@ -25,67 +26,67 @@ function buildToolsManual(tools?: StructuredToolInterface[]): string {
     const schema = (t as { schema?: { shape?: Record<string, unknown> } }).schema;
     const params = schema?.shape
       ? Object.keys(schema.shape).join(', ')
-      : 'nenhum';
+      : 'none';
     return [
       `### \`${t.name}\``,
       t.description,
-      `**Parâmetros:** ${params}`,
+      `**Parameters:** ${params}`,
     ].join('\n');
   });
 
-  return `\n\n## 🛠 Ferramentas disponíveis\n\n${entries.join('\n\n---\n\n')}`;
+  return `\n\n## 🛠 Available tools\n\n${entries.join('\n\n---\n\n')}`;
 }
 
 function buildSystemPrompt(
   files?: UploadedFile[],
   tools?: StructuredToolInterface[],
+  lang: Lang = 'pt-br',
 ): string {
-  let prompt = `Você é o Data Analysis Harness, um analista de dados para pequenas empresas e empreendedores.
-Seu objetivo: ajudar o usuário a entender seus dados, encontrar oportunidades de aumentar o lucro e reduzir custos operacionais.
+  let prompt = `You are the Data Analysis Harness, a data analyst for small businesses and entrepreneurs.
+Your goal: help the user understand their data, find opportunities to increase profit and reduce operational costs.
 
-## ⛔ REGRA CRÍTICA — PROTOCOLO ANTI-CHUTE
+## ⛔ CRITICAL RULE — NO-GUESSING PROTOCOL
 
-**VOCÊ NUNCA, SOB NENHUMA HIPÓTESE, PODE INVENTAR OU ESTIMAR NÚMEROS.**
+**YOU MUST NEVER, UNDER ANY CIRCUMSTANCE, INVENT OR ESTIMATE NUMBERS.**
 
-Isso inclui:
-- Somas, totais, médias, percentuais, contagens
-- Mínimos, máximos, rankings, comparações numéricas
-- Qualquer valor que dependa dos dados carregados
+This includes:
+- Sums, totals, averages, percentages, counts
+- Minimums, maximums, rankings, numeric comparisons
+- Any value that depends on the loaded data
 
-Se uma pergunta envolve QUALQUER número sobre os dados, você DEVE:
-1. Chamar a ferramenta apropriada.
-2. Aguardar o resultado.
-3. Só então responder com o valor exato retornado pela ferramenta.
+If a question involves ANY number about the data, you MUST:
+1. Call the appropriate tool.
+2. Wait for the result.
+3. Only then answer with the exact value returned by the tool.
 
-Responder com um número estimado ou inventado É PROIBIDO. Prefira dizer "preciso consultar os dados" a chutar.
+Answering with an estimated or invented number IS FORBIDDEN. Prefer saying "I need to check the data" over guessing.
 
-## 📊 Como gerar gráficos
+## 📊 How to generate charts
 
-**Barras agrupadas (duas dimensões):**
-Quando o usuário pedir "X por Y ao longo de Z" ou "X agrupado por Y", siga este fluxo:
-1. PRIMEIRO chame \`pivot(rowColumn="Z", columnColumn="Y", valueColumn="X", operation="sum")\`
-2. DEPOIS chame \`plot(chartType="bar", xKey="Z", yKeys=<colunas retornadas pelo pivot>, data=<pivot.data>)\`
+**Grouped bars (two dimensions):**
+When the user asks for "X by Y over Z" or "X grouped by Y", follow this flow:
+1. FIRST call \`pivot(rowColumn="Z", columnColumn="Y", valueColumn="X", operation="sum")\`
+2. THEN call \`plot(chartType="bar", xKey="Z", yKeys=<columns returned by pivot>, data=<pivot.data>)\`
 
-Exemplo: "Vendas por categoria em cada mês"
-→ pivot(rowColumn="data", columnColumn="categoria", valueColumn="Vl_Total", operation="sum")
-→ plot(chartType="bar", xKey="data", yKeys=["Eletrônicos","Móveis"], data=...)
+Example: "Sales by category in each month"
+→ pivot(rowColumn="date", columnColumn="category", valueColumn="revenue", operation="sum")
+→ plot(chartType="bar", xKey="date", yKeys=["Electronics","Furniture"], data=...)
 
-**Gráficos de uma dimensão:**
-Use group_by, pareto, trend, etc. e passe o resultado direto pro \`plot\`.
+**Single-dimension charts:**
+Use group_by, pareto, trend, etc. and pass the result straight into \`plot\`.
 
-**Variações:**
-- \`horizontal: true\` → barras horizontais (nomes longos)
-- \`stacked: true\` → barras/áreas empilhadas
-- \`donut: true\` → gráfico de rosca
-- \`dual_axis\` + \`lineYKey\` → barra + linha sobrepostas
+**Variations:**
+- \`horizontal: true\` → horizontal bars (long names)
+- \`stacked: true\` → stacked bars/areas
+- \`donut: true\` → donut chart
+- \`dual_axis\` + \`lineYKey\` → bar + line overlay
 
-## Regras gerais:
-- Sempre responda em **português**
-- Se o usuário ainda não fez upload de arquivo, instrua-o a fazer upload
-- Após upload, chame \`data_profile\` ANTES de qualquer resposta sobre os dados
-- Após qualquer análise numérica, OFEREÇA gerar um gráfico com a tool \`plot\` (veja seção 📊 acima)
-- Use Markdown para tabelas e listas
-- Seja conciso e direto`;
+## General rules:
+- If the user has not uploaded a file yet, instruct them to upload one
+- After upload, call \`data_profile\` BEFORE any answer about the data
+- After any numeric analysis, OFFER to generate a chart with the \`plot\` tool (see the 📊 section above)
+- Use Markdown for tables and lists
+- Be concise and direct`;
 
   prompt += buildToolsManual(tools);
 
@@ -97,7 +98,7 @@ Use group_by, pareto, trend, etc. e passe o resultado direto pro \`plot\`.
         if (f.type.includes('csv') || f.type.includes('json') || f.name.endsWith('.csv')) {
           try {
             const text = Buffer.from(f.data, 'base64').toString('utf-8').slice(0, 300);
-            preview = `\n  Preview (primeiros 300 chars):\n  ${text}`;
+            preview = `\n  Preview (first 300 chars):\n  ${text}`;
           } catch {
             // binary file or decode error, skip preview
           }
@@ -106,11 +107,15 @@ Use group_by, pareto, trend, etc. e passe o resultado direto pro \`plot\`.
       })
       .join('\n');
 
-    prompt += `\n\n## Arquivos disponíveis para análise:\n${fileList}`;
+    prompt += `\n\n## Files available for analysis:\n${fileList}`;
   } else {
     prompt +=
-      '\n\n## Status atual:\nNenhum arquivo foi enviado ainda. Instrua o usuário a fazer upload.';
+      '\n\n## Current status:\nNo file has been uploaded yet. Instruct the user to upload one.';
   }
+
+  // ponytail: única parte variável por idioma — sempre no fim do system prompt,
+  // que permanece 100% em inglês.
+  prompt += `\n\n## Output language\nRespond in **${LANG_NAME[lang]}**.`;
 
   return prompt;
 }
@@ -155,6 +160,7 @@ export async function* streamResponse(
   files?: UploadedFile[],
   tools?: StructuredToolInterface[],
   trace?: StreamTrace,
+  lang: Lang = 'pt-br',
 ): AsyncGenerator<StreamToken> {
   const chatBase = createDeepSeekChat();
 
@@ -162,7 +168,7 @@ export async function* streamResponse(
   const chat = toolMap.size > 0 ? chatBase.bindTools(tools!) : chatBase;
 
   const langchainMessages: BaseMessage[] = [
-    new SystemMessage(buildSystemPrompt(files, tools)),
+    new SystemMessage(buildSystemPrompt(files, tools, lang)),
     ...messages.map((m) =>
       m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content),
     ),
@@ -205,7 +211,7 @@ export async function* streamResponse(
       if (!tool) {
         langchainMessages.push(
           new ToolMessage({
-            content: `Erro: ferramenta "${tc.name}" não encontrada.`,
+            content: `Error: tool "${tc.name}" not found.`,
             tool_call_id: tc.id ?? '',
           }),
         );
@@ -250,7 +256,7 @@ export async function* streamResponse(
       } catch (err) {
         langchainMessages.push(
           new ToolMessage({
-            content: `Erro ao executar ${tc.name}: ${err instanceof Error ? err.message : 'erro desconhecido'}`,
+            content: `Error running ${tc.name}: ${err instanceof Error ? err.message : 'unknown error'}`,
             tool_call_id: tc.id ?? '',
           }),
         );

@@ -22,15 +22,16 @@ import {
   Cell,
 } from 'recharts';
 import type { ChartSpec } from '@/lib/tools/plot';
+import { t, type Lang } from '@/lib/i18n';
 
 function useIsDark(): boolean {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    setDark(mq.matches);
-    const cb = (e: MediaQueryListEvent) => setDark(e.matches);
-    mq.addEventListener('change', cb);
-    return () => mq.removeEventListener('change', cb);
+    const sync = (e?: MediaQueryListEvent) => setDark(e ? e.matches : mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
   }, []);
   return dark;
 }
@@ -44,10 +45,10 @@ function truncate(v: string, max = 20): string {
   return v.length > max ? v.slice(0, max) + '\u2026' : v;
 }
 
-function Histogram({ spec, dark }: { spec: ChartSpec; dark: boolean }) {
+function Histogram({ spec, dark, lang }: { spec: ChartSpec; dark: boolean; lang: Lang }) {
   const yKey = spec.yKey;
   const values = spec.data.map((d) => Number(d[yKey])).filter((v) => !isNaN(v));
-  if (values.length === 0) return <p className="text-sm text-zinc-500 p-4">Sem dados numéricos.</p>;
+  if (values.length === 0) return <p className="text-sm text-zinc-500 p-4">{t(lang, 'noNumericData')}</p>;
 
   const binCount = Math.min(10, Math.ceil(Math.sqrt(values.length)));
   const min = Math.min(...values);
@@ -100,7 +101,7 @@ function DualAxisChart({ spec, dark }: { spec: ChartSpec; dark: boolean }) {
   );
 }
 
-export function ChartCard({ spec }: { spec: ChartSpec }) {
+export function ChartCard({ spec, lang = 'pt-br' }: { spec: ChartSpec; lang?: Lang }) {
   const dark = useIsDark();
   const yKeys = spec.yKeys?.length ? spec.yKeys : [spec.yKey];
   const { chartType, title, data, xKey, stacked, horizontal, donut } = spec;
@@ -112,9 +113,9 @@ export function ChartCard({ spec }: { spec: ChartSpec }) {
       </div>
       <div className="px-2 py-3">
         {data.length === 0 ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500 p-4 text-center">Sem dados para exibir.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 p-4 text-center">{t(lang, 'noChartData')}</p>
         ) : chartType === 'histogram' ? (
-          <Histogram spec={spec} dark={dark} />
+          <Histogram spec={spec} dark={dark} lang={lang} />
         ) : chartType === 'dual_axis' ? (
           <DualAxisChart spec={spec} dark={dark} />
         ) : (

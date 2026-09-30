@@ -7,12 +7,12 @@ export function createValueCountsTool(tenantId: string) {
     async ({ column, limit }: { column: string; limit?: number }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       if (!cols.includes(column)) {
-        return `Coluna "${column}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+        return `Column "${column}" not found. Available columns: ${cols.join(', ')}`;
       }
 
       const freq = new Map<string, number>();
@@ -46,19 +46,19 @@ export function createValueCountsTool(tenantId: string) {
     },
     {
       name: 'value_counts',
-      description: `Conta a frequência de cada valor distinto em uma coluna categórica, ordenado do mais frequente ao menos frequente, com percentuais.
+      description: `Counts the frequency of each distinct value in a categorical column, ordered from most to least frequent, with percentages.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Quais são os produtos/categorias/clientes/regiões mais frequentes?"
-- "Qual a distribuição de X?"
-- "Quantos pedidos por status/canal/vendedor?"
-- Qualquer pergunta sobre ranking ou contagem de categorias.`,
+⚠️ Use this tool when the user asks:
+- "What are the most frequent products/categories/customers/regions?"
+- "What is the distribution of X?"
+- "How many orders per status/channel/salesperson?"
+- Any question about ranking or counting categories.`,
       schema: z.object({
-        column: z.string().describe('Nome da coluna categórica para contar frequências'),
+        column: z.string().describe('Name of the categorical column to count frequencies for'),
         limit: z
           .number()
           .optional()
-          .describe('Número máximo de valores a retornar (padrão: 20)'),
+          .describe('Maximum number of values to return (default: 20)'),
       }),
     },
   );
@@ -81,20 +81,20 @@ export function createGroupByTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [groupColumn, valueColumn]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
       // Build groups
       const groups = new Map<string, number[]>();
       for (const row of rows) {
-        const key = String(row[groupColumn] ?? '(vazio)');
+        const key = String(row[groupColumn] ?? '(empty)');
         const val = Number(row[valueColumn]);
         if (isNaN(val)) continue;
         if (!groups.has(key)) groups.set(key, []);
@@ -150,24 +150,24 @@ export function createGroupByTool(tenantId: string) {
     },
     {
       name: 'group_by',
-      description: `Agrupa os dados por uma coluna e calcula uma operação (soma, média, mínimo, máximo, contagem, mediana) sobre outra coluna para cada grupo. Ordenado pelo resultado decrescente.
+      description: `Groups the data by a column and computes an operation (sum, average, minimum, maximum, count, median) on another column for each group. Ordered by descending result.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Receita/faturamento/lucro por categoria/produto/região/vendedor?"
-- "Ticket médio por cliente?"
-- "Total de vendas agrupado por mês/filial/canal?"
-- Qualquer pergunta de "X por Y" ou "X agrupado por Y".`,
+⚠️ Use this tool when the user asks:
+- "Revenue/profit by category/product/region/salesperson?"
+- "Average ticket per customer?"
+- "Total sales grouped by month/branch/channel?"
+- Any "X by Y" or "X grouped by Y" question.`,
       schema: z.object({
         groupColumn: z
           .string()
-          .describe('Coluna para agrupar (ex: "categoria", "região", "vendedor")'),
+          .describe('Column to group by (e.g. "category", "region", "salesperson")'),
         valueColumn: z
           .string()
-          .describe('Coluna numérica para agregar (ex: "receita", "quantidade")'),
+          .describe('Numeric column to aggregate (e.g. "revenue", "quantity")'),
         operation: z
           .enum(GROUP_OPS)
-          .describe('Operação: sum, avg, min, max, count, median'),
-        limit: z.number().optional().describe('Número máximo de grupos a retornar (padrão: 20)'),
+          .describe('Operation: sum, avg, min, max, count, median'),
+        limit: z.number().optional().describe('Maximum number of groups to return (default: 20)'),
       }),
     },
   );

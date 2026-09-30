@@ -1,4 +1,5 @@
 // ponytail: centralized guardrails — add rules here, not scattered across files.
+import { t, type Lang } from '@/lib/i18n';
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
 const MAX_MESSAGE_LENGTH = 8_000; // characters
@@ -12,17 +13,20 @@ interface UploadedFile {
 
 // ── File size ──────────────────────────────────────────────────────────────
 
-export function checkFileSize(file: { name: string; size: number }): string | null {
+export function checkFileSize(
+  file: { name: string; size: number },
+  lang: Lang = 'pt-br',
+): string | null {
   if (file.size > MAX_FILE_SIZE) {
     const mb = (file.size / 1024 / 1024).toFixed(1);
-    return `Arquivo "${file.name}" (${mb} MB) excede o limite de 3 MB.`;
+    return t(lang, 'fileTooBig', { name: file.name, mb });
   }
   return null;
 }
 
-export function checkAllFileSizes(files: UploadedFile[]): string | null {
+export function checkAllFileSizes(files: UploadedFile[], lang: Lang = 'pt-br'): string | null {
   for (const f of files) {
-    const err = checkFileSize(f);
+    const err = checkFileSize(f, lang);
     if (err) return err;
   }
   return null;
@@ -54,14 +58,17 @@ const BLOCKED_MIME_TYPES = new Set([
   'application/x-python-code',
 ]);
 
-export function checkFileType(file: { name: string; type: string }): string | null {
+export function checkFileType(
+  file: { name: string; type: string },
+  lang: Lang = 'pt-br',
+): string | null {
   const lowerName = file.name.toLowerCase();
   const ext = '.' + lowerName.split('.').pop();
   if (BLOCKED_EXTENSIONS.has(ext)) {
-    return `Tipo de arquivo não permitido: ${ext}. Apenas CSV, Excel, JSON, Parquet e TXT.`;
+    return t(lang, 'fileTypeBlocked', { ext });
   }
   if (BLOCKED_MIME_TYPES.has(file.type)) {
-    return `Tipo MIME não permitido: ${file.type}.`;
+    return t(lang, 'mimeBlocked', { type: file.type });
   }
   return null;
 }
@@ -101,9 +108,8 @@ const INJECTION_PATTERNS = [
   /```[\s\S]*?\b(system|instructions?|prompt|rules?)\b[\s\S]*?```/i,
 ];
 
-const REJECTION_MESSAGE = 'Desculpe, não posso processar essa mensagem. Por favor, reformule sua pergunta.';
-
-export function checkPromptInjection(text: string): string | null {
+export function checkPromptInjection(text: string, lang: Lang = 'pt-br'): string | null {
+  const REJECTION_MESSAGE = t(lang, 'injectionRejected');
   const cleaned = text.trim();
 
   if (!cleaned) return null;
@@ -131,11 +137,11 @@ export function checkPromptInjection(text: string): string | null {
   return null;
 }
 
-export function checkFiles(files: UploadedFile[]): string | null {
-  const sizeErr = checkAllFileSizes(files);
+export function checkFiles(files: UploadedFile[], lang: Lang = 'pt-br'): string | null {
+  const sizeErr = checkAllFileSizes(files, lang);
   if (sizeErr) return sizeErr;
   for (const f of files) {
-    const typeErr = checkFileType(f);
+    const typeErr = checkFileType(f, lang);
     if (typeErr) return typeErr;
   }
   return null;
@@ -172,9 +178,9 @@ export function sanitizeInput(text: string): string {
 
 // ── Message length ─────────────────────────────────────────────────────────
 
-export function checkMessageLength(text: string): string | null {
+export function checkMessageLength(text: string, lang: Lang = 'pt-br'): string | null {
   if (text.length > MAX_MESSAGE_LENGTH) {
-    return `Mensagem excede o limite de ${MAX_MESSAGE_LENGTH} caracteres.`;
+    return t(lang, 'messageTooLong', { max: MAX_MESSAGE_LENGTH });
   }
   return null;
 }

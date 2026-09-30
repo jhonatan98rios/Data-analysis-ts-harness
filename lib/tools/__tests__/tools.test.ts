@@ -93,7 +93,7 @@ describe('aggregate', () => {
     const { createAggregateTool } = await import('@/lib/tools/aggregate');
     const t = createAggregateTool(TENANT);
     const raw = await t.invoke({ column: 'nonexistent', operation: 'sum' }) as string;
-    assert.ok(raw.includes('não encontrada'));
+    assert.ok(raw.includes('not found'));
   });
 });
 
@@ -354,7 +354,7 @@ describe('plot', () => {
       data: [{ m: 'Jan', r: 1000, c: 10 }],
     }) as string);
     assert.ok(r.chart);
-    assert.ok((r.summary as string).includes('eixo duplo'));
+    assert.ok((r.summary as string).includes('dual axis'));
   });
 
   it('stacked bar', async () => {
@@ -374,7 +374,7 @@ describe('plot', () => {
       chartType: 'pie', title: 'D', xKey: 'c', yKey: 'v', donut: true,
       data: [{ c: 'A', v: 60 }, { c: 'B', v: 40 }],
     }) as string);
-    assert.ok((r.summary as string).includes('rosca'));
+    assert.ok((r.summary as string).includes('donut'));
   });
 
   it('horizontal bar', async () => {

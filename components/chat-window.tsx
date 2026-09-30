@@ -8,6 +8,7 @@ import { SessionDrawer } from '@/components/session-drawer';
 import type { ChartSpec } from '@/lib/tools/plot';
 import { loadSession, saveSession, upsertMeta, type SessionMessage } from '@/lib/sessions';
 import { checkFileSize, checkFileType, checkPromptInjection, sanitizeInput } from '@/lib/guardrails';
+import { t, type Lang } from '@/lib/i18n';
 
 interface UploadedFile {
   name: string;
@@ -31,41 +32,76 @@ function formatSize(bytes: number) {
 interface DemoDataset {
   file: string;
   emoji: string;
-  title: string;
-  description: string;
-  question: string;
+  content: Record<Lang, { title: string; description: string; question: string }>;
 }
 
 // Datasets fictícios em public/demo/. O CSV é buscado e encaixado no mesmo fluxo
 // de upload — nunca vai pra IA, só pro contexto das tools.
+// public/demo/en-us/ tem os mesmos dados com o cabeçalho em inglês.
 const DEMO_DATASETS: DemoDataset[] = [
   {
     file: 'vendas.csv',
     emoji: '📈',
-    title: 'Vendas & Lucro',
-    description: 'Pedidos do ano com receita, custo e lucro por produto, canal e cliente.',
-    question: 'Analise estes dados de vendas e me mostre os principais insights para aumentar o lucro.',
+    content: {
+      'pt-br': {
+        title: 'Vendas & Lucro',
+        description: 'Pedidos do ano com receita, custo e lucro por produto, canal e cliente.',
+        question: 'Analise estes dados de vendas e me mostre os principais insights para aumentar o lucro.',
+      },
+      'en-us': {
+        title: 'Sales & Profit',
+        description: 'Yearly orders with revenue, cost and profit by product, channel and customer.',
+        question: 'Analyze this sales data and show me the main insights to increase profit.',
+      },
+    },
   },
   {
     file: 'marketing.csv',
     emoji: '📣',
-    title: 'Marketing & ROI',
-    description: 'Investimento e retorno de cada canal e campanha.',
-    question: 'Analise o retorno de cada canal de marketing e me diga onde devo investir mais e onde devo cortar.',
+    content: {
+      'pt-br': {
+        title: 'Marketing & ROI',
+        description: 'Investimento e retorno de cada canal e campanha.',
+        question: 'Analise o retorno de cada canal de marketing e me diga onde devo investir mais e onde devo cortar.',
+      },
+      'en-us': {
+        title: 'Marketing & ROI',
+        description: 'Investment and return for each channel and campaign.',
+        question: 'Analyze the return of each marketing channel and tell me where I should invest more and where I should cut.',
+      },
+    },
   },
   {
     file: 'producao.csv',
     emoji: '🏭',
-    title: 'Produção & Desperdício',
-    description: 'Produção por linha e turno com refugo e horas paradas.',
-    question: 'Analise a produção e me mostre onde estou perdendo mais com desperdício e paradas de máquina.',
+    content: {
+      'pt-br': {
+        title: 'Produção & Desperdício',
+        description: 'Produção por linha e turno com refugo e horas paradas.',
+        question: 'Analise a produção e me mostre onde estou perdendo mais com desperdício e paradas de máquina.',
+      },
+      'en-us': {
+        title: 'Production & Waste',
+        description: 'Production by line and shift with defects and downtime hours.',
+        question: 'Analyze the production and show me where I am losing the most with waste and machine downtime.',
+      },
+    },
   },
   {
     file: 'clientes.csv',
     emoji: '👥',
-    title: 'Clientes & Churn',
-    description: 'Base de clientes com LTV, NPS, suporte e churn.',
-    question: 'Analise minha base de clientes e me mostre como reduzir o churn e reter os melhores clientes.',
+    content: {
+      'pt-br': {
+        title: 'Clientes & Churn',
+        description: 'Base de clientes com LTV, NPS, suporte e churn.',
+        question: 'Analise minha base de clientes e me mostre como reduzir o churn e reter os melhores clientes.',
+      },
+      'en-us': {
+        title: 'Customers & Churn',
+        description: 'Customer base with LTV, NPS, support and churn.',
+        question: 'Analyze my customer base and show me how to reduce churn and retain the best customers.',
+      },
+    },
   },
 ];
 
@@ -85,6 +121,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [lang, setLang] = useState<Lang>('pt-br');
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +140,19 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     });
     return () => { cancelled = true; };
   }, [sessionId]);
+
+  // idioma persistido + atributo lang do documento
+  useEffect(() => {
+    const saved = localStorage.getItem('dah-lang');
+    const apply = () => {
+      if (saved === 'en-us' || saved === 'pt-br') setLang(saved);
+    };
+    apply();
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('dah-lang', lang);
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   // ponytail: persist after each message change (debounced by React batching)
   useEffect(() => {
@@ -127,9 +177,9 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     if (!file) return;
 
     // guardrails: file size + type
-    const sizeErr = checkFileSize(file);
+    const sizeErr = checkFileSize(file, lang);
     if (sizeErr) { alert(sizeErr); e.target.value = ''; return; }
-    const typeErr = checkFileType(file);
+    const typeErr = checkFileType(file, lang);
     if (typeErr) { alert(typeErr); e.target.value = ''; return; }
 
     const reader = new FileReader();
@@ -154,7 +204,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history, files, tenantId, sessionId }),
+      body: JSON.stringify({ messages: history, files, tenantId, sessionId, lang }),
       signal: controller.signal,
     });
 
@@ -229,7 +279,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
       const msg = err instanceof Error ? err.message : 'stream error';
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), role: 'assistant', text: `Error: ${msg}`, time: now() },
+        { id: Date.now(), role: 'assistant', text: t(lang, 'errorPrefix', { msg }), time: now() },
       ]);
     } finally {
       setStreaming(false);
@@ -245,7 +295,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     // guardrails: prompt injection + XSS
     const safeText = text ? sanitizeInput(text) : text;
     if (safeText) {
-      const injectionErr = checkPromptInjection(safeText);
+      const injectionErr = checkPromptInjection(safeText, lang);
       if (injectionErr) {
         setMessages((prev) => [
           ...prev,
@@ -261,7 +311,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     const userMsg: Message = {
       id: Date.now(),
       role: 'user',
-      text: safeText || (file ? `[Arquivo enviado: ${file.name}]` : ''),
+      text: safeText || (file ? t(lang, 'fileSent', { name: file.name }) : ''),
       time: now(),
       file: file ?? undefined,
     };
@@ -280,8 +330,9 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
     if (streaming || demoLoading) return;
     setDemoLoading(demo.file);
     try {
-      const res = await fetch(`/demo/${demo.file}`);
-      if (!res.ok) throw new Error(`não encontrei ${demo.file}`);
+      const dir = lang === 'en-us' ? 'en-us/' : '';
+      const res = await fetch(`/demo/${dir}${demo.file}`);
+      if (!res.ok) throw new Error(t(lang, 'demoNotFound', { file: demo.file }));
       const text = await res.text();
       const file: UploadedFile = {
         name: demo.file,
@@ -292,17 +343,17 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
       const userMsg: Message = {
         id: Date.now(),
         role: 'user',
-        text: demo.question,
+        text: demo.content[lang].question,
         time: now(),
         file,
       };
       setMessages((prev) => [...prev, userMsg]);
       await runChat(userMsg);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'erro desconhecido';
+      const msg = err instanceof Error ? err.message : t(lang, 'unknownError');
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), role: 'assistant', text: `Erro ao carregar dados de exemplo: ${msg}`, time: now() },
+        { id: Date.now(), role: 'assistant', text: t(lang, 'demoLoadError', { msg }), time: now() },
       ]);
     } finally {
       setDemoLoading(null);
@@ -339,19 +390,20 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
         .dark .markdown-body a { color: #818cf8; }
       `}</style>
 
-      <SessionDrawer currentId={sessionId} open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <SessionDrawer currentId={sessionId} open={drawerOpen} onClose={() => setDrawerOpen(false)} lang={lang} />
 
       <div className="flex flex-col flex-1 relative bg-slate-50/80 dark:bg-neutral-950/90">
         {/* mesh gradient behind everything */}
         <div className="absolute inset-0 bg-mesh pointer-events-none" />
 
-        {/* header — sticky glass */}
-        <header className="relative z-10 sticky top-0 flex items-center gap-3 glass-strong px-4 py-3">
+        {/* header — sticky glass. z-30: precisa ficar acima das mensagens
+            (mesmo z-index antes deixava o conteúdo rolar por cima e bloquear o clique). */}
+        <header className="relative z-30 sticky top-0 flex items-center gap-3 glass-strong px-4 py-3">
           {/* hamburger */}
           <button
             onClick={() => setDrawerOpen(true)}
             className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors shrink-0"
-            aria-label="abrir sessões"
+            aria-label={t(lang, 'openSessions')}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" className="fill-current">
               <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
@@ -365,6 +417,17 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
             ⚡ 14 tools
           </div>
+          {/* language toggle */}
+          <button
+            onClick={() => setLang(lang === 'pt-br' ? 'en-us' : 'pt-br')}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors"
+            aria-label={t(lang, 'changeLanguage')}
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" className="fill-current" aria-hidden>
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.93 6h-2.95a15.7 15.7 0 0 0-1.32-3.42A8.03 8.03 0 0 1 18.93 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14A7.96 7.96 0 0 1 4 12c0-.69.09-1.36.26-2h3.38a16.5 16.5 0 0 0 0 4H4.26zm.82 2h2.95c.32 1.25.78 2.4 1.32 3.42A8.03 8.03 0 0 1 5.07 16zm2.95-8H5.07a8.03 8.03 0 0 1 4.27-3.42A15.7 15.7 0 0 0 8.02 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66a14.7 14.7 0 0 1 0-4h4.68a14.7 14.7 0 0 1 0 4zm.32 5.42c.54-1.02 1-2.17 1.32-3.42h2.95a8.03 8.03 0 0 1-4.27 3.42zM16.36 14a16.5 16.5 0 0 0 0-4h3.38c.17.64.26 1.31.26 2 0 .69-.09 1.36-.26 2h-3.38z" />
+            </svg>
+            {lang === 'pt-br' ? 'PT' : 'EN'}
+          </button>
         </header>
 
         {/* messages */}
@@ -377,15 +440,16 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
                 </svg>
               </div>
               <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200">
-                Analise seus dados
+                {t(lang, 'emptyTitle')}
               </h2>
               <p className="mt-1 text-sm text-slate-400 dark:text-slate-500 max-w-xs leading-relaxed">
-                Envie um arquivo CSV, Excel ou JSON — ou comece agora com um conjunto de exemplo.
+                {t(lang, 'emptySubtitle')}
               </p>
 
               <div className="mt-5 w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {DEMO_DATASETS.map((demo) => {
                   const loading = demoLoading === demo.file;
+                  const copy = demo.content[lang];
                   return (
                     <button
                       key={demo.file}
@@ -398,23 +462,23 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
                       <div className="flex items-center gap-2">
                         <span className="text-lg" aria-hidden>{demo.emoji}</span>
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                          {demo.title}
+                          {copy.title}
                         </span>
                         {loading && (
                           <span className="ml-auto text-[11px] text-indigo-500 dark:text-indigo-400">
-                            carregando…
+                            {t(lang, 'loading')}
                           </span>
                         )}
                       </div>
                       <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 leading-snug">
-                        {demo.description}
+                        {copy.description}
                       </p>
                     </button>
                   );
                 })}
               </div>
               <p className="mt-3 text-[11px] text-slate-400/80 dark:text-slate-600">
-                Dados fictícios só para demonstração.
+                {t(lang, 'demoDisclaimer')}
               </p>
             </div>
           )}
@@ -468,7 +532,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
                     <p className="whitespace-pre-wrap">{m.text}</p>
                   ))}
                 {m.charts?.map((chart) => (
-                  <ChartCard key={chart.id} spec={chart as ChartSpec} />
+                  <ChartCard key={chart.id} spec={chart as ChartSpec} lang={lang} />
                 ))}
                 <span className={`block text-right text-[10px] mt-1 ${
                   m.role === 'user' ? 'text-white/60' : 'text-slate-400 dark:text-slate-500'
@@ -481,7 +545,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
           <div ref={bottomRef} />
         </div>
 
-        <div className="relative z-10 sticky bottom-0 bg-gradient-to-t from-slate-50/80 via-slate-50/80 dark:from-neutral-950/90 dark:via-neutral-950/90 to-transparent pt-2 pb-2">
+        <div className="relative z-30 sticky bottom-0 bg-gradient-to-t from-slate-50/80 via-slate-50/80 dark:from-neutral-950/90 dark:via-neutral-950/90 to-transparent pt-2 pb-2">
 
         {/* file chip above input */}
         {currentFile && (
@@ -491,7 +555,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
             </svg>
             <span className="truncate flex-1 text-slate-700 dark:text-slate-200">{currentFile.name}</span>
             <span className="text-xs text-slate-400 dark:text-slate-500">{formatSize(currentFile.size)}</span>
-            <button onClick={removeFile} className="text-slate-300 dark:text-slate-600 hover:text-red-500 shrink-0" aria-label="remover arquivo">
+            <button onClick={removeFile} className="text-slate-300 dark:text-slate-600 hover:text-red-500 shrink-0" aria-label={t(lang, 'removeFile')}>
               <svg viewBox="0 0 24 24" width="16" height="16" className="fill-current">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
               </svg>
@@ -510,13 +574,13 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
             accept=".csv,.xlsx,.xls,.json,.parquet,.tsv,.txt"
             onChange={handleFileChange}
             className="hidden"
-            aria-label="upload file"
+            aria-label={t(lang, 'uploadFile')}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-slate-400 hover:text-indigo-500 transition-colors"
-            aria-label="anexar arquivo"
+            aria-label={t(lang, 'attachFile')}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" className="fill-current">
               <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z" />
@@ -527,7 +591,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Pergunte sobre seus dados…"
+              placeholder={t(lang, 'inputPlaceholder')}
               className="flex-1 bg-transparent text-[15px] text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
             />
           </div>
@@ -535,7 +599,7 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
             type="submit"
             disabled={!input.trim() && !currentFile}
             className="w-9 h-9 rounded-full bg-indigo-500 dark:bg-indigo-600 flex items-center justify-center shrink-0 hover:bg-indigo-600 dark:hover:bg-indigo-500 disabled:opacity-30 transition-all"
-            aria-label="enviar"
+            aria-label={t(lang, 'send')}
           >
             <svg viewBox="0 0 24 24" width="18" height="18" className="fill-white">
               <path d="M1.101 21.757 23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z" />

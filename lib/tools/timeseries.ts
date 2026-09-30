@@ -27,13 +27,13 @@ export function createComparePeriodsTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [dateColumn, valueColumn]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
@@ -93,29 +93,29 @@ export function createComparePeriodsTool(tenantId: string) {
     },
     {
       name: 'compare_periods',
-      description: `Compara duas fatias temporais dos dados: calcula o valor agregado (soma ou média) em cada período e a variação absoluta e percentual entre elas.
+      description: `Compares two time slices of the data: computes the aggregate value (sum or average) in each period and the absolute and percentage change between them.
 
-Os períodos são definidos por datas de início e fim. Use qualquer formato de data que apareça nos dados (ex: "2024-01-01", "01/01/2024", "20240101").
+Periods are defined by start and end dates. Use any date format that appears in the data (e.g. "2024-01-01", "01/01/2024", "20240101").
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Vendas desse mês vs mês passado?"
-- "Comparação janeiro vs fevereiro?"
-- "Receita deste trimestre vs trimestre anterior?"
-- "Cresceu ou caiu em relação ao período X?"
-- Qualquer comparação entre dois períodos.`,
+⚠️ Use this tool when the user asks:
+- "This month's sales vs last month?"
+- "Comparison of January vs February?"
+- "Revenue this quarter vs the previous quarter?"
+- "Did it grow or fall compared to period X?"
+- Any comparison between two periods.`,
       schema: z.object({
-        dateColumn: z.string().describe('Coluna com datas (ex: "data", "mes", "dia")'),
-        valueColumn: z.string().describe('Coluna numérica para comparar (ex: "receita", "vendas")'),
-        period1Label: z.string().describe('Rótulo do primeiro período (ex: "Janeiro", "Mês passado")'),
-        period1Start: z.string().describe('Data inicial do período 1 (ex: "2024-01-01", "01/01/2024")'),
-        period1End: z.string().describe('Data final do período 1'),
-        period2Label: z.string().describe('Rótulo do segundo período (ex: "Fevereiro", "Este mês")'),
-        period2Start: z.string().describe('Data inicial do período 2'),
-        period2End: z.string().describe('Data final do período 2'),
+        dateColumn: z.string().describe('Column with dates (e.g. "date", "month", "day")'),
+        valueColumn: z.string().describe('Numeric column to compare (e.g. "revenue", "sales")'),
+        period1Label: z.string().describe('Label for the first period (e.g. "January", "Last month")'),
+        period1Start: z.string().describe('Start date of period 1 (e.g. "2024-01-01", "01/01/2024")'),
+        period1End: z.string().describe('End date of period 1'),
+        period2Label: z.string().describe('Label for the second period (e.g. "February", "This month")'),
+        period2Start: z.string().describe('Start date of period 2'),
+        period2End: z.string().describe('End date of period 2'),
         operation: z
           .enum(['sum', 'avg'])
           .optional()
-          .describe('"sum" para total, "avg" para média (padrão: sum)'),
+          .describe('"sum" for total, "avg" for average (default: sum)'),
       }),
     },
   );
@@ -134,13 +134,13 @@ export function createTrendTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [dateColumn, valueColumn]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
@@ -149,7 +149,7 @@ export function createTrendTool(tenantId: string) {
       // Group by the raw date value (ponytail: no complex date parsing)
       const periods = new Map<string, number[]>();
       for (const row of rows) {
-        const period = String(row[dateColumn] ?? '(vazio)').trim();
+        const period = String(row[dateColumn] ?? '(empty)').trim();
         const val = Number(row[valueColumn]);
         if (isNaN(val)) continue;
         if (!periods.has(period)) periods.set(period, []);
@@ -201,21 +201,21 @@ export function createTrendTool(tenantId: string) {
     },
     {
       name: 'trend',
-      description: `Calcula a tendência ao longo do tempo: agrupa por período (usando os valores da coluna de data como estão nos dados), calcula o valor agregado por período, e computa o crescimento período a período e o crescimento total (primeiro vs último período).
+      description: `Computes the trend over time: groups by period (using the date column values as they appear in the data), computes the aggregate value per period, and calculates period-over-period growth and total growth (first vs last period).
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "As vendas estão crescendo?"
-- "Qual a tendência de receita/lucro/custo?"
-- "Evolução mês a mês?"
-- "Está melhorando ou piorando ao longo do tempo?"
-- Qualquer pergunta sobre evolução temporal.`,
+⚠️ Use this tool when the user asks:
+- "Are sales growing?"
+- "What is the revenue/profit/cost trend?"
+- "Month-over-month evolution?"
+- "Is it improving or worsening over time?"
+- Any question about time evolution.`,
       schema: z.object({
-        dateColumn: z.string().describe('Coluna com períodos (ex: "data", "mes", "ano")'),
-        valueColumn: z.string().describe('Coluna numérica para analisar tendência (ex: "receita", "vendas")'),
+        dateColumn: z.string().describe('Column with periods (e.g. "date", "month", "year")'),
+        valueColumn: z.string().describe('Numeric column to analyze the trend of (e.g. "revenue", "sales")'),
         operation: z
           .enum(['sum', 'avg'])
           .optional()
-          .describe('"sum" para total, "avg" para média (padrão: sum)'),
+          .describe('"sum" for total, "avg" for average (default: sum)'),
       }),
     },
   );

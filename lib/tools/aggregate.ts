@@ -46,18 +46,18 @@ export function createAggregateTool(tenantId: string) {
     async ({ column, operation }: { column: string; operation: Op }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       if (!cols.includes(column)) {
-        return `Coluna "${column}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+        return `Column "${column}" not found. Available columns: ${cols.join(', ')}`;
       }
 
       const nums = toNumbers(rows, column);
 
       if (nums.length === 0) {
-        return `Coluna "${column}" não contém valores numéricos (${rows.length} linhas analisadas).`;
+        return `Column "${column}" contains no numeric values (${rows.length} rows analyzed).`;
       }
 
       const result = compute(nums, operation);
@@ -74,21 +74,21 @@ export function createAggregateTool(tenantId: string) {
     },
     {
       name: 'aggregate',
-      description: `Executa uma operação de agregação sobre uma coluna numérica dos dados carregados.
+      description: `Executes an aggregation operation on a numeric column of the loaded data.
 
-⚠️ Use esta ferramenta para QUALQUER pergunta sobre: soma, total, média, ticket médio, mínimo, máximo, mediana, desvio padrão, contagem, valor mais alto, valor mais baixo, faturamento, receita, custo, quantidade... ENFIM, QUALQUER pergunta que envolva um número derivado dos dados.
+⚠️ Use this tool for ANY question about: sum, total, average, mean ticket, minimum, maximum, median, standard deviation, count, highest value, lowest value, revenue, cost, quantity... IN SHORT, ANY question that involves a number derived from the data.
 
-Operações disponíveis: sum (soma/total), avg (média), min, max, count (contagem de valores numéricos), median (mediana), stddev (desvio padrão).
+Available operations: sum (total), avg (average), min, max, count (count of numeric values), median, stddev (standard deviation).
 
-NUNCA invente ou estime valores. SEMPRE chame esta ferramenta.`,
+NEVER invent or estimate values. ALWAYS call this tool.`,
       schema: z.object({
         column: z
           .string()
-          .describe('Nome da coluna numérica a agregar'),
+          .describe('Name of the numeric column to aggregate'),
         operation: z
           .enum(OPS)
           .describe(
-            'Operação: sum (soma/total), avg (média), min (mínimo), max (máximo), count (quantos valores numéricos), median (mediana), stddev (desvio padrão)',
+            'Operation: sum (total), avg (average), min (minimum), max (maximum), count (how many numeric values), median, stddev (standard deviation)',
           ),
       }),
     },

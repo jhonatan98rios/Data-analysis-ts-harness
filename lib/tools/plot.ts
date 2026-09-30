@@ -46,7 +46,7 @@ export function createPlotTool() {
       } = params;
 
       if (!data?.length) {
-        return JSON.stringify({ summary: '❌ Nenhum dado fornecido para o gráfico.', chart: null });
+        return JSON.stringify({ summary: '❌ No data provided for the chart.', chart: null });
       }
 
       // Validate keys
@@ -60,7 +60,7 @@ export function createPlotTool() {
       if (lineYKey && !keys.includes(lineYKey)) missing.push(`lineYKey="${lineYKey}"`);
       if (missing.length > 0) {
         return JSON.stringify({
-          summary: `❌ Chave(s) não encontrada(s): ${missing.join(', ')}. Disponíveis: ${keys.join(', ')}`,
+          summary: `❌ Missing key(s): ${missing.join(', ')}. Available: ${keys.join(', ')}`,
           chart: null,
         });
       }
@@ -83,73 +83,73 @@ export function createPlotTool() {
       };
 
       const typeLabel: Record<string, string> = {
-        bar: stacked ? 'barras empilhadas' : horizontal ? 'barras horizontais' : 'barras',
-        line: 'linha',
-        pie: donut ? 'rosca (donut)' : 'pizza',
-        scatter: 'dispersão',
-        area: 'área',
-        histogram: 'histograma',
-        dual_axis: 'eixo duplo (barra + linha)',
+        bar: stacked ? 'stacked bars' : horizontal ? 'horizontal bars' : 'bars',
+        line: 'line',
+        pie: donut ? 'donut' : 'pie',
+        scatter: 'scatter',
+        area: 'area',
+        histogram: 'histogram',
+        dual_axis: 'dual axis (bar + line)',
       };
 
       return JSON.stringify({
-        summary: `📊 Gráfico de ${typeLabel[chartType] || chartType} "${title}" gerado com ${data.length} pontos.`,
+        summary: `📊 ${typeLabel[chartType] || chartType} chart "${title}" generated with ${data.length} points.`,
         chart,
       });
     },
     {
       name: 'plot',
-      description: `Gera um gráfico a partir de dados já calculados por outras ferramentas. NÃO calcula dados — apenas recebe resultados e cria visualizações.
+      description: `Generates a chart from data already computed by other tools. It does NOT compute data — it only receives results and creates visualizations.
 
-## Tipos de gráfico
-- bar: comparação entre categorias (ex: vendas por produto)
-  - Use \`horizontal: true\` quando os nomes das categorias forem longos
-  - Use \`stacked: true\` com \`yKeys: ["receita", "custo"]\` para quebrar cada barra em segmentos
-- line: evolução temporal (ex: vendas ao longo dos meses)
-- pie: proporções (ex: share de mercado). Use \`donut: true\` para gráfico de rosca
-- area: tendência com área preenchida (ex: crescimento acumulado)
-  - Use \`stacked: true\` com múltiplos yKeys para áreas empilhadas
-- scatter: relação entre duas variáveis (ex: preço vs quantidade)
-- histogram: distribuição de frequência (ex: faixas de ticket médio)
-- dual_axis: barras + linha sobrepostas com dois eixos Y. Ex: barras = receita mensal, linha = % de crescimento.
-  - \`yKey\`: coluna para as barras, \`lineYKey\`: coluna para a linha
+## Chart types
+- bar: comparison between categories (e.g. sales by product)
+  - Use \`horizontal: true\` when category names are long
+  - Use \`stacked: true\` with \`yKeys: ["revenue", "cost"]\` to split each bar into segments
+- line: time evolution (e.g. sales over months)
+- pie: proportions (e.g. market share). Use \`donut: true\` for a donut chart
+- area: trend with filled area (e.g. cumulative growth)
+  - Use \`stacked: true\` with multiple yKeys for stacked areas
+- scatter: relationship between two variables (e.g. price vs quantity)
+- histogram: frequency distribution (e.g. average ticket ranges)
+- dual_axis: overlaid bars + line with two Y axes. E.g. bars = monthly revenue, line = % growth.
+  - \`yKey\`: column for the bars, \`lineYKey\`: column for the line
 
-## Variações (parâmetros opcionais)
-- \`stacked: true\`: empilha múltiplas séries Y (bar e area)
-- \`horizontal: true\`: barras horizontais (bar)
-- \`donut: true\`: gráfico de rosca em vez de pizza (pie)
-- \`yKeys: ["col1", "col2"]\`: múltiplas séries no mesmo eixo
-- \`lineYKey\`: coluna para a linha no gráfico dual_axis
-- \`lineYLabel\`: rótulo do eixo Y da linha no dual_axis
+## Variations (optional parameters)
+- \`stacked: true\`: stack multiple Y series (bar and area)
+- \`horizontal: true\`: horizontal bars (bar)
+- \`donut: true\`: donut chart instead of pie (pie)
+- \`yKeys: ["col1", "col2"]\`: multiple series on the same axis
+- \`lineYKey\`: column for the line in the dual_axis chart
+- \`lineYLabel\`: Y-axis label for the line in dual_axis
 
-## Regras
-1. Para gráficos de barras agrupadas (ex: vendas por categoria em cada mês), PRIMEIRO chame a tool \`pivot\` para cruzar as duas dimensões. DEPOIS chame \`plot\` passando o \`data\` retornado e \`yKeys\` com os nomes das colunas do pivot.
-2. Para gráficos simples de uma dimensão, use group_by, pareto, trend, etc. e passe o resultado como \`data\`.
-3. NUNCA invente dados — passe exatamente o que a tool anterior retornou.
-4. Para line/area, os dados devem estar ordenados por tempo.
+## Rules
+1. For grouped bar charts (e.g. sales by category in each month), FIRST call the \`pivot\` tool to cross the two dimensions. THEN call \`plot\` passing the returned \`data\` and \`yKeys\` with the pivot column names.
+2. For simple single-dimension charts, use group_by, pareto, trend, etc. and pass the result as \`data\`.
+3. NEVER invent data — pass exactly what the previous tool returned.
+4. For line/area, the data must be ordered by time.
 
-⚠️ Use esta ferramenta quando o usuário pedir QUALQUER visualização ou gráfico. Após análises numéricas, OFEREÇA gerar o gráfico.`,
+⚠️ Use this tool when the user asks for ANY visualization or chart. After numeric analyses, OFFER to generate the chart.`,
       schema: z.object({
         chartType: z
           .enum(CHART_TYPES)
-          .describe('Tipo: bar, line, pie, scatter, area, histogram, dual_axis'),
-        title: z.string().describe('Título (ex: "Vendas por Categoria")'),
-        xKey: z.string().describe('Chave para eixo X (ex: "categoria", "period")'),
-        yKey: z.string().describe('Chave principal para eixo Y (ex: "sum", "total")'),
+          .describe('Type: bar, line, pie, scatter, area, histogram, dual_axis'),
+        title: z.string().describe('Title (e.g. "Sales by Category")'),
+        xKey: z.string().describe('Key for the X axis (e.g. "category", "period")'),
+        yKey: z.string().describe('Main key for the Y axis (e.g. "sum", "total")'),
         yKeys: z
           .array(z.string())
           .optional()
-          .describe('Múltiplas séries Y (ex: ["receita", "custo"]). Use com stacked: true para empilhar.'),
+          .describe('Multiple Y series (e.g. ["revenue", "cost"]). Use with stacked: true to stack.'),
         data: z
           .array(z.record(z.string(), z.unknown()))
-          .describe('Array de objetos — use EXATAMENTE o resultado de outra tool (group_by.groups, pareto.items, trend.data)'),
-        xLabel: z.string().optional().describe('Rótulo eixo X'),
-        yLabel: z.string().optional().describe('Rótulo eixo Y'),
-        stacked: z.boolean().optional().describe('Empilhar séries (bar, area)'),
-        horizontal: z.boolean().optional().describe('Barras horizontais (bar)'),
-        donut: z.boolean().optional().describe('Gráfico de rosca (pie)'),
-        lineYKey: z.string().optional().describe('Chave para linha no dual_axis (ex: "crescimento")'),
-        lineYLabel: z.string().optional().describe('Rótulo do eixo Y da linha no dual_axis'),
+          .describe('Array of objects — use EXACTLY the result of another tool (group_by.groups, pareto.items, trend.data)'),
+        xLabel: z.string().optional().describe('X-axis label'),
+        yLabel: z.string().optional().describe('Y-axis label'),
+        stacked: z.boolean().optional().describe('Stack series (bar, area)'),
+        horizontal: z.boolean().optional().describe('Horizontal bars (bar)'),
+        donut: z.boolean().optional().describe('Donut chart (pie)'),
+        lineYKey: z.string().optional().describe('Key for the line in dual_axis (e.g. "growth")'),
+        lineYLabel: z.string().optional().describe('Y-axis label for the line in dual_axis'),
       }),
     },
   );

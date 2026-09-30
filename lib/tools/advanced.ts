@@ -13,13 +13,13 @@ export function createCountByGroupTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [column1, column2]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
@@ -28,8 +28,8 @@ export function createCountByGroupTool(tenantId: string) {
       const col2Totals = new Map<string, number>();
 
       for (const row of rows) {
-        const v1 = String(row[column1] ?? '(vazio)');
-        const v2 = String(row[column2] ?? '(vazio)');
+        const v1 = String(row[column1] ?? '(empty)');
+        const v2 = String(row[column2] ?? '(empty)');
 
         if (!matrix.has(v1)) matrix.set(v1, new Map());
         const inner = matrix.get(v1)!;
@@ -85,17 +85,17 @@ export function createCountByGroupTool(tenantId: string) {
     },
     {
       name: 'count_by_group',
-      description: `Tabulação cruzada: conta a frequência de cada combinação entre duas colunas categóricas. Retorna uma matriz onde cada linha é um valor da coluna1 e cada coluna é um valor da coluna2, com os totais.
+      description: `Cross-tabulation: counts the frequency of each combination between two categorical columns. Returns a matrix where each row is a value of column1 and each column is a value of column2, with totals.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Quantas devoluções por categoria e por filial?"
-- "Qual o perfil de compra por região e por produto?"
-- "Cruzamento entre status e canal de venda?"
-- "Distribuição de X por Y?"
-- Qualquer pergunta que cruze duas variáveis categóricas.`,
+⚠️ Use this tool when the user asks:
+- "How many returns per category and per branch?"
+- "What is the purchase profile by region and product?"
+- "Cross-tabulation between status and sales channel?"
+- "Distribution of X by Y?"
+- Any question that crosses two categorical variables.`,
       schema: z.object({
-        column1: z.string().describe('Primeira coluna categórica (linhas da matriz)'),
-        column2: z.string().describe('Segunda coluna categórica (colunas da matriz)'),
+        column1: z.string().describe('First categorical column (matrix rows)'),
+        column2: z.string().describe('Second categorical column (matrix columns)'),
       }),
     },
   );
@@ -118,13 +118,13 @@ export function createDescribeConditionalTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [targetColumn, conditionColumn]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
@@ -138,7 +138,7 @@ export function createDescribeConditionalTool(tenantId: string) {
       }
 
       if (nums.length === 0) {
-        return `Nenhuma linha encontrada com ${conditionColumn}="${conditionValue}" que tenha valores numéricos em "${targetColumn}".`;
+        return `No rows found with ${conditionColumn}="${conditionValue}" that have numeric values in "${targetColumn}".`;
       }
 
       const stats: Record<string, number> = {};
@@ -184,29 +184,29 @@ export function createDescribeConditionalTool(tenantId: string) {
     },
     {
       name: 'describe_conditional',
-      description: `Calcula estatísticas (soma, média, contagem, min, max, mediana) de uma coluna numérica, mas SOMENTE para as linhas onde outra coluna atende a uma condição específica.
+      description: `Computes statistics (sum, average, count, min, max, median) of a numeric column, but ONLY for the rows where another column meets a specific condition.
 
-É como um filter + aggregate em uma única chamada — mais rápido e econômico.
+It is like a filter + aggregate in a single call — faster and more economical.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Qual o total/média de devoluções?"
-- "Quanto foi vendido apenas dos produtos da categoria X?"
-- "Ticket médio só dos clientes de SP?"
-- "Valor máximo de venda apenas no canal online?"
-- Qualquer estatística numérica filtrada por uma condição.`,
+⚠️ Use this tool when the user asks:
+- "What is the total/average of returns?"
+- "How much was sold only from category X products?"
+- "Average ticket for customers from SP only?"
+- "Maximum sale value only in the online channel?"
+- Any numeric statistic filtered by a condition.`,
       schema: z.object({
         targetColumn: z
           .string()
-          .describe('Coluna numérica para calcular estatísticas (ex: "Vl_Total", "receita")'),
+          .describe('Numeric column to compute statistics for (e.g. "total", "revenue")'),
         conditionColumn: z
           .string()
-          .describe('Coluna para aplicar a condição (ex: "Status", "Categoria")'),
+          .describe('Column to apply the condition to (e.g. "status", "category")'),
         conditionValue: z
           .string()
-          .describe('Valor exato da condição (ex: "Devolvida", "Eletrônicos")'),
+          .describe('Exact value of the condition (e.g. "Returned", "Electronics")'),
         operations: z
           .array(z.enum(DESCRIBE_OPS))
-          .describe('Lista de operações: sum, avg, count, min, max, median'),
+          .describe('List of operations: sum, avg, count, min, max, median'),
       }),
     },
   );
@@ -228,12 +228,12 @@ export function createPivotTool(tenantId: string) {
       operation: (typeof PIVOT_OPS)[number];
     }) => {
       const rows = getData(tenantId);
-      if (!rows?.length) return 'Nenhum dado carregado.';
+      if (!rows?.length) return 'No data loaded.';
 
       const cols = getColumns(tenantId);
       for (const c of [rowColumn, columnColumn, valueColumn]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available: ${cols.join(', ')}`;
         }
       }
 
@@ -242,8 +242,8 @@ export function createPivotTool(tenantId: string) {
       const allColValues = new Set<string>();
 
       for (const row of rows) {
-        const rv = String(row[rowColumn] ?? '(vazio)');
-        const cv = String(row[columnColumn] ?? '(vazio)');
+        const rv = String(row[rowColumn] ?? '(empty)');
+        const cv = String(row[columnColumn] ?? '(empty)');
         const val = Number(row[valueColumn]);
         if (isNaN(val)) continue;
 
@@ -290,35 +290,35 @@ export function createPivotTool(tenantId: string) {
         columns: colValues.slice(0, 15),
         columnsTruncated: colValues.length > 15,
         data,
-        _hint: 'Use plot com chartType="bar", xKey=<rowColumn>, yKeys=<columns>, stacked=false para barras agrupadas. Use stacked=true para empilhadas.',
+        _hint: 'Use plot with chartType="bar", xKey=<rowColumn>, yKeys=<columns>, stacked=false for grouped bars. Use stacked=true for stacked bars.',
       });
     },
     {
       name: 'pivot',
-      description: `Tabela dinâmica (pivot table): cruza duas colunas categóricas e agrega uma terceira coluna numérica. O resultado é perfeito para gráficos de barras agrupadas ou empilhadas.
+      description: `Pivot table: crosses two categorical columns and aggregates a third numeric column. The result is perfect for grouped or stacked bar charts.
 
-Exemplo: pivot(rowColumn="data", columnColumn="categoria", valueColumn="Vl_Total", operation="sum")
-→ Retorna dados no formato: [{data: "2024-01", Eletrônicos: 45000, Móveis: 32000}, ...]
+Example: pivot(rowColumn="date", columnColumn="category", valueColumn="revenue", operation="sum")
+→ Returns data in the format: [{date: "2024-01", Electronics: 45000, Furniture: 32000}, ...]
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Vendas por categoria agrupadas por mês/data/região?"
-- "Comparação de X por Y ao longo do tempo?"
-- "Tabela cruzada de..."
-- "Quero ver o valor por categoria, quebrado por filial/data/vendedor"
-- Antes de gerar gráficos de barras agrupadas: PRIMEIRO chame pivot, DEPOIS chame plot com os dados retornados.`,
+⚠️ Use this tool when the user asks:
+- "Sales by category grouped by month/date/region?"
+- "Comparison of X by Y over time?"
+- "Cross-tabulation of..."
+- "I want to see the value by category, broken down by branch/date/salesperson"
+- Before generating grouped bar charts: FIRST call pivot, THEN call plot with the returned data.`,
       schema: z.object({
         rowColumn: z
           .string()
-          .describe('Coluna para as LINHAS da tabela — normalmente a dimensão temporal (ex: "data", "mes") ou agrupamento principal (ex: "filial")'),
+          .describe('Column for the table ROWS — usually the temporal dimension (e.g. "date", "month") or main grouping (e.g. "branch")'),
         columnColumn: z
           .string()
-          .describe('Coluna para as COLUNAS da tabela — as categorias que viram séries no gráfico (ex: "categoria", "produto", "vendedor")'),
+          .describe('Column for the table COLUMNS — the categories that become series in the chart (e.g. "category", "product", "salesperson")'),
         valueColumn: z
           .string()
-          .describe('Coluna numérica para agregar (ex: "Vl_Total", "receita", "quantidade")'),
+          .describe('Numeric column to aggregate (e.g. "total", "revenue", "quantity")'),
         operation: z
           .enum(PIVOT_OPS)
-          .describe('Operação: sum (total), avg (média), count (contagem)'),
+          .describe('Operation: sum (total), avg (average), count (count)'),
       }),
     },
   );

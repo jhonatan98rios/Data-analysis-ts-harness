@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getIndex, deleteSession, newId, type SessionMeta } from '@/lib/sessions';
+import { t, LANG_LOCALE, type Lang } from '@/lib/i18n';
 
 export function SessionDrawer({
   currentId,
   open,
   onClose,
+  lang = 'pt-br',
 }: {
   currentId: string;
   open: boolean;
   onClose: () => void;
+  lang?: Lang;
 }) {
   const router = useRouter();
   const [sessions, setSessions] = useState<SessionMeta[]>([]);
@@ -46,11 +49,11 @@ export function SessionDrawer({
       <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white dark:bg-neutral-900 z-50 shadow-xl flex flex-col animate-slide-in-left">
         {/* header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-neutral-800">
-          <h2 className="font-semibold text-slate-800 dark:text-slate-200">Sessões</h2>
+          <h2 className="font-semibold text-slate-800 dark:text-slate-200">{t(lang, 'sessions')}</h2>
           <button
             onClick={onClose}
             className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800"
-            aria-label="fechar"
+            aria-label={t(lang, 'close')}
           >
             <svg viewBox="0 0 24 24" width="16" height="16" className="fill-current">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
@@ -63,14 +66,14 @@ export function SessionDrawer({
           onClick={create}
           className="mx-3 mt-3 px-3 py-2 text-sm font-medium bg-indigo-500 dark:bg-indigo-600 text-white rounded-lg hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-colors"
         >
-          + Nova sessão
+          {t(lang, 'newSession')}
         </button>
 
         {/* session list */}
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
           {sessions.length === 0 && (
             <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-8">
-              Nenhuma sessão ainda
+              {t(lang, 'noSessions')}
             </p>
           )}
           {sessions.map((s) => (
@@ -91,10 +94,10 @@ export function SessionDrawer({
               {/* preview + time */}
               <div className="flex-1 min-w-0">
                 <p className="truncate text-[13px] leading-snug">
-                  {s.preview || 'Nova sessão'}
+                  {s.preview || t(lang, 'untitledSession')}
                 </p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                  {new Date(s.lastUpdate).toLocaleDateString('pt-BR', {
+                  {new Date(s.lastUpdate).toLocaleDateString(LANG_LOCALE[lang], {
                     day: '2-digit',
                     month: 'short',
                     hour: '2-digit',
@@ -107,7 +110,7 @@ export function SessionDrawer({
               <button
                 onClick={(e) => remove(e, s.id)}
                 className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 shrink-0 transition-opacity"
-                aria-label="excluir sessão"
+                aria-label={t(lang, 'deleteSession')}
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" className="fill-current">
                   <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />

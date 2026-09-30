@@ -109,7 +109,7 @@ export function createProfileTool(tenantId: string) {
     async () => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
@@ -126,14 +126,14 @@ export function createProfileTool(tenantId: string) {
     },
     {
       name: 'data_profile',
-      description: `Gera um perfil completo dos dados carregados: número de linhas, colunas, tipos, % de nulos, valores únicos, e para colunas numéricas: min, max, média, mediana. Para colunas categóricas: top 5 valores mais frequentes.
+      description: `Generates a complete profile of the loaded data: number of rows, columns, types, % nulls, unique values, and for numeric columns: min, max, average, median. For categorical columns: top 5 most frequent values.
 
-⚠️ Use esta ferramenta OBRIGATORIAMENTE:
-1. Após o upload de qualquer arquivo — ANTES de responder qualquer pergunta sobre os dados.
-2. Quando o usuário perguntar "o que tem nesse arquivo?", "quais colunas?", "me mostre os dados", "como estão estruturados os dados?", ou qualquer variante de "explore os dados".
-3. Quando você precisar saber os nomes das colunas disponíveis para usar outras ferramentas.
+⚠️ Use this tool MANDATORILY:
+1. After uploading any file — BEFORE answering any question about the data.
+2. When the user asks "what's in this file?", "which columns?", "show me the data", "how is the data structured?", or any variant of "explore the data".
+3. When you need to know the available column names to use other tools.
 
-NUNCA presuma os nomes das colunas. SEMPRE confira com data_profile primeiro.`,
+NEVER assume column names. ALWAYS check with data_profile first.`,
       schema: z.object({}),
     },
   );

@@ -11,6 +11,7 @@ import { createCorrelationTool, createRatioTool } from '@/lib/tools/relation';
 import { createCountByGroupTool, createDescribeConditionalTool, createPivotTool } from '@/lib/tools/advanced';
 import { createPlotTool } from '@/lib/tools/plot';
 import { checkFiles, checkPromptInjection, sanitizeInput, checkMessageLength } from '@/lib/guardrails';
+import type { Lang } from '@/lib/i18n';
 
 // ponytail: nodejs (não edge) porque o driver do MongoDB precisa de sockets TCP.
 export const runtime = 'nodejs';
@@ -34,7 +35,9 @@ export async function POST(req: Request) {
       files?: UploadedFile[];
       tenantId?: string;
       sessionId?: string;
+      lang?: Lang;
     };
+    const lang: Lang = body.lang === 'en-us' ? 'en-us' : 'pt-br';
 
     if (!body.messages?.length) {
       return new Response('messages required', {
@@ -45,7 +48,7 @@ export async function POST(req: Request) {
 
     // guardrails: file size + type
     if (body.files?.length) {
-      const fileErr = checkFiles(body.files);
+      const fileErr = checkFiles(body.files, lang);
       if (fileErr) {
         return new Response(JSON.stringify({ error: fileErr }), {
           status: 400,
@@ -57,14 +60,14 @@ export async function POST(req: Request) {
     // guardrails: prompt injection + message length + XSS on the last user message
     const lastUserMsg = body.messages.filter((m) => m.role === 'user').at(-1);
     if (lastUserMsg) {
-      const lenErr = checkMessageLength(lastUserMsg.content);
+      const lenErr = checkMessageLength(lastUserMsg.content, lang);
       if (lenErr) {
         return new Response(JSON.stringify({ error: lenErr }), {
           status: 400,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': acao },
         });
       }
-      const injectionErr = checkPromptInjection(lastUserMsg.content);
+      const injectionErr = checkPromptInjection(lastUserMsg.content, lang);
       if (injectionErr) {
         return new Response(JSON.stringify({ error: injectionErr }), {
           status: 400,
@@ -112,7 +115,7 @@ export async function POST(req: Request) {
         const enqueue = (data: Record<string, unknown>) =>
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         try {
-          for await (const st of streamResponse(body.messages, body.files, tools, trace)) {
+          for await (const st of streamResponse(body.messages, body.files, tools, trace, lang)) {
             if (st.type === 'chart' && st.chart) {
               enqueue({ chart: st.chart });
             } else if (st.type === 'thinking') {

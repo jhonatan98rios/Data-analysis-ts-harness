@@ -15,12 +15,12 @@ export function createTopNTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       if (!cols.includes(column)) {
-        return `Coluna "${column}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+        return `Column "${column}" not found. Available columns: ${cols.join(', ')}`;
       }
 
       const dir = direction ?? 'top';
@@ -32,7 +32,7 @@ export function createTopNTool(tenantId: string) {
         .filter((x) => !isNaN(x.val));
 
       if (indexed.length === 0) {
-        return `Coluna "${column}" não contém valores numéricos.`;
+        return `Column "${column}" contains no numeric values.`;
       }
 
       indexed.sort((a, b) => (dir === 'top' ? b.val - a.val : a.val - b.val));
@@ -60,20 +60,20 @@ export function createTopNTool(tenantId: string) {
     },
     {
       name: 'top_n',
-      description: `Retorna os N maiores (ou menores) valores de uma coluna, com as linhas completas para contexto. Inclui o share (%) do total que esses top N representam.
+      description: `Returns the N largest (or smallest) values of a column, with the full rows for context. Includes the share (%) of the total that these top N represent.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Top 10 clientes/produtos/vendedores por receita/vendas?"
-- "Quais são os maiores/menores X?"
-- "Quem são meus melhores/piores clientes?"
-- Qualquer pergunta de ranking.`,
+⚠️ Use this tool when the user asks:
+- "Top 10 customers/products/salespeople by revenue/sales?"
+- "What are the largest/smallest X?"
+- "Who are my best/worst customers?"
+- Any ranking question.`,
       schema: z.object({
-        column: z.string().describe('Coluna numérica para ordenar'),
-        n: z.number().optional().describe('Quantos itens retornar (padrão: 10)'),
+        column: z.string().describe('Numeric column to sort by'),
+        n: z.number().optional().describe('How many items to return (default: 10)'),
         direction: z
           .enum(['top', 'bottom'])
           .optional()
-          .describe('"top" para maiores, "bottom" para menores (padrão: top)'),
+          .describe('"top" for largest, "bottom" for smallest (default: top)'),
       }),
     },
   );
@@ -94,12 +94,12 @@ export function createFilterTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       if (!cols.includes(column)) {
-        return `Coluna "${column}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+        return `Column "${column}" not found. Available columns: ${cols.join(', ')}`;
       }
 
       const matches: Record<string, unknown>[] = [];
@@ -155,25 +155,25 @@ export function createFilterTool(tenantId: string) {
     },
     {
       name: 'filter',
-      description: `Filtra as linhas dos dados por uma condição em uma coluna. Retorna quantas linhas correspondem e uma amostra de até 10 resultados.
+      description: `Filters the data rows by a condition on a column. Returns how many rows match and a sample of up to 10 results.
 
-Operadores disponíveis:
-- equals / not_equals: comparação exata (texto ou número)
-- greater_than / less_than / greater_equal / less_equal: comparação numérica
-- contains: o texto contém o valor (case-insensitive)
+Available operators:
+- equals / not_equals: exact comparison (text or number)
+- greater_than / less_than / greater_equal / less_equal: numeric comparison
+- contains: the text contains the value (case-insensitive)
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Quais vendas foram canceladas?"
-- "Clientes que compraram mais de R$1000?"
-- "Pedidos do estado de SP?"
-- "Quanto representa X% do total?" (combine com o count do resultado)
-- Qualquer pergunta com filtro ou segmentação.`,
+⚠️ Use this tool when the user asks:
+- "Which sales were canceled?"
+- "Customers who bought more than $1000?"
+- "Orders from the state of SP?"
+- "How much does X% of the total represent?" (combine with the count from the result)
+- Any question with a filter or segmentation.`,
       schema: z.object({
-        column: z.string().describe('Coluna para aplicar o filtro'),
+        column: z.string().describe('Column to apply the filter to'),
         operator: z
           .enum(FILTER_OPS)
-          .describe('Operador: equals, not_equals, greater_than, less_than, greater_equal, less_equal, contains'),
-        value: z.string().describe('Valor para comparar'),
+          .describe('Operator: equals, not_equals, greater_than, less_than, greater_equal, less_equal, contains'),
+        value: z.string().describe('Value to compare against'),
       }),
     },
   );
@@ -190,20 +190,20 @@ export function createParetoTool(tenantId: string) {
     }) => {
       const rows = getData(tenantId);
       if (!rows || rows.length === 0) {
-        return 'Nenhum dado carregado. Faça upload de um arquivo primeiro.';
+        return 'No data loaded. Upload a file first.';
       }
 
       const cols = getColumns(tenantId);
       for (const c of [categoryColumn, valueColumn]) {
         if (!cols.includes(c)) {
-          return `Coluna "${c}" não encontrada. Colunas disponíveis: ${cols.join(', ')}`;
+          return `Column "${c}" not found. Available columns: ${cols.join(', ')}`;
         }
       }
 
       // Sum values by category
       const groupSums = new Map<string, number>();
       for (const row of rows) {
-        const key = String(row[categoryColumn] ?? '(vazio)');
+        const key = String(row[categoryColumn] ?? '(empty)');
         const val = Number(row[valueColumn]);
         if (isNaN(val)) continue;
         groupSums.set(key, (groupSums.get(key) ?? 0) + val);
@@ -241,21 +241,21 @@ export function createParetoTool(tenantId: string) {
     },
     {
       name: 'pareto',
-      description: `Análise de Pareto (80/20): calcula a contribuição de cada categoria para o total e a contribuição acumulada. Identifica quantas categorias representam 80% do total.
+      description: `Pareto analysis (80/20): computes each category's contribution to the total and the cumulative contribution. Identifies how many categories account for 80% of the total.
 
-⚠️ Use esta ferramenta quando o usuário perguntar:
-- "Quais produtos/categorias mais contribuem para a receita?"
-- "Onde devo focar meus esforços?"
-- "Análise 80/20 dos meus dados."
-- "Quais clientes representam a maior parte do faturamento?"
-- Qualquer pergunta sobre concentração ou distribuição de contribuição.`,
+⚠️ Use this tool when the user asks:
+- "Which products/categories contribute most to revenue?"
+- "Where should I focus my efforts?"
+- "80/20 analysis of my data."
+- "Which customers account for most of the revenue?"
+- Any question about concentration or contribution distribution.`,
       schema: z.object({
         categoryColumn: z
           .string()
-          .describe('Coluna de categoria (ex: "produto", "cliente", "região")'),
+          .describe('Category column (e.g. "product", "customer", "region")'),
         valueColumn: z
           .string()
-          .describe('Coluna numérica para somar (ex: "receita", "lucro", "custo")'),
+          .describe('Numeric column to sum (e.g. "revenue", "profit", "cost")'),
       }),
     },
   );
