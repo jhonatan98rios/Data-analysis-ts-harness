@@ -12,7 +12,9 @@ valor imediato — e como usaria os próprios dados do mesmo jeito.
 > dentro de aspas. Por isso **nenhum campo de texto tem vírgula** e os números usam
 > ponto decimal sem separador de milhar. Mantenha assim ao editar/regenerar.
 >
-> Regerar: `node scripts/generate-demo-data.mjs` (determinístico).
+> Regerar: `node scripts/generate-demo-data.mjs` (determinístico). Ele também gera
+> `public/demo/en-us/` — mesmo dado numérico, com arquivo, cabeçalho e valores
+> categóricos em inglês (`sales.csv`, `marketing.csv`, `production.csv`, `customers.csv`).
 
 ---
 

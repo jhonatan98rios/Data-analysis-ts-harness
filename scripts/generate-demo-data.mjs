@@ -240,7 +240,8 @@ function genClientes() {
 }
 
 // ── run ────────────────────────────────────────────────────────────────────
-// Só o cabeçalho (e o nome do arquivo) mudam no en-us — os dados são idênticos.
+// en-us: mesmo dado numérico; mudam nome do arquivo, cabeçalho e valores
+// categóricos (categoria, região, canal, turno, produto, nomes de empresa...).
 const EN_HEADERS = {
   'vendas.csv': { data: 'date', mes: 'month', pedido_id: 'order_id', cliente: 'customer', canal: 'channel', regiao: 'region', vendedor: 'salesperson', categoria: 'category', produto: 'product', quantidade: 'quantity', preco_unitario: 'unit_price', desconto_pct: 'discount_pct', receita: 'revenue', custo_total: 'total_cost', lucro: 'profit' },
   'marketing.csv': { data: 'date', mes: 'month', canal: 'channel', campanha: 'campaign', investimento: 'investment', impressoes: 'impressions', cliques: 'clicks', leads: 'leads', pedidos: 'orders', novos_clientes: 'new_customers', receita: 'revenue' },
@@ -254,6 +255,76 @@ const EN_NAMES = {
   'producao.csv': 'production.csv',
   'clientes.csv': 'customers.csv',
 };
+
+// tradução de valores categóricos (por coluna do CSV em pt)
+const EN_VALUES = {
+  canal: {
+    'Loja Fisica': 'Physical Store', Online: 'Online', Televendas: 'Phone Sales', Marketplace: 'Marketplace',
+    'Google Ads': 'Google Ads', 'Meta Ads': 'Meta Ads', 'TikTok Ads': 'TikTok Ads',
+    'Email Marketing': 'Email Marketing', Influenciadores: 'Influencers',
+  },
+  regiao: { Sudeste: 'Southeast', Sul: 'South', Nordeste: 'Northeast', 'Centro-Oeste': 'Central-West', Norte: 'North' },
+  categoria: { Eletronicos: 'Electronics', Moveis: 'Furniture', Vestuario: 'Apparel', Alimentos: 'Food', Beleza: 'Beauty' },
+  produto: {
+    'Caixa de Som': 'Speaker', 'Tenis Esportivo': 'Running Shoes', 'Cesta Organica': 'Organic Basket',
+    'Kit Skincare': 'Skincare Kit', Estante: 'Bookshelf', 'Camiseta Basica': 'Basic T-Shirt',
+    'Perfume Importado': 'Imported Perfume', 'Kit Cafe Especial': 'Specialty Coffee Kit', Smartwatch: 'Smartwatch',
+    'Cadeira Escritorio': 'Office Chair', 'Carregador Turbo': 'Turbo Charger', 'Fone Bluetooth': 'Bluetooth Headphones',
+    'Mesa Escritorio': 'Office Desk', 'Jaqueta Jeans': 'Denim Jacket',
+    'Refrigerante Cola': 'Cola Soda', 'Cha Gelado': 'Iced Tea', 'Suco Natural': 'Natural Juice',
+  },
+  campanha: {
+    'Search Institucional': 'Brand Search', 'Search Concorrentes': 'Competitor Search', Shopping: 'Shopping',
+    Remarketing: 'Remarketing', 'Publico Frio': 'Cold Audience', Stories: 'Stories',
+    'TikTok Criadores': 'TikTok Creators', 'TikTok Lancamento': 'TikTok Launch',
+    'Newsletter Semanal': 'Weekly Newsletter', 'Base Inativos': 'Inactive Base',
+    'Micro Influencers': 'Micro Influencers', 'Creator Parceria': 'Creator Partnership',
+  },
+  linha: { 'Linha A': 'Line A', 'Linha B': 'Line B', 'Linha C': 'Line C' },
+  turno: { Manha: 'Morning', Tarde: 'Afternoon', Noite: 'Night' },
+  segmento: { Pequeno: 'Small', Medio: 'Medium', Grande: 'Large' },
+  canal_aquisicao: { Indicacao: 'Referral', 'Venda Direta': 'Direct Sales', Evento: 'Event' },
+};
+
+// nomes de empresa são gerados por combinação — traduz por token (a ordem importa)
+const EN_NAME_TOKENS = [
+  ['Auto Pecas', 'Auto Parts'], ['Supermercado', 'Supermarket'], ['Distribuidora', 'Distributor'],
+  ['Restaurante', 'Restaurant'], ['Confeitaria', 'Confectionery'], ['Barbearia', 'Barbershop'],
+  ['Escritorio', 'Office'], ['Academia', 'Gym'], ['Livraria', 'Bookstore'], ['Cafeteria', 'Coffee Shop'],
+  ['Pizzaria', 'Pizzeria'], ['Farmacia', 'Pharmacy'], ['Padaria', 'Bakery'], ['Clinica', 'Clinic'],
+  ['Petshop', 'Pet Shop'], ['Boutique', 'Boutique'], ['Mercado', 'Market'], ['Loja', 'Store'],
+  ['Otica', 'Optical Store'], ['Sao Jose', 'Saint Joseph'], ['do Vale', 'Valley'], ['da Praia', 'Beachside'],
+  ['do Norte', 'Northside'], ['Boa Vista', 'Buena Vista'], ['Primavera', 'Spring'], ['Aurora', 'Aurora'],
+  ['Modelo', 'Model'], ['Central', 'Central'], ['Ipiranga', 'Ipiranga'],
+];
+
+function translateName(value) {
+  let out = value;
+  for (const [pt, en] of EN_NAME_TOKENS) out = out.split(pt).join(en);
+  return out;
+}
+
+function translateValues(content) {
+  const lines = content.trim().split('\n');
+  const header = lines[0].split(',');
+  const out = [lines[0]];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(',');
+    out.push(
+      cells
+        .map((v, j) => {
+          const col = header[j];
+          const dict = EN_VALUES[col];
+          if (dict && dict[v] !== undefined) return dict[v];
+          if (col === 'cliente' || col === 'nome') return translateName(v);
+          return v;
+        })
+        .join(','),
+    );
+  }
+  return out.join('\n');
+}
+
 function translateHeader(content, map) {
   const nl = content.indexOf('\n');
   const header = content.slice(0, nl).split(',').map((h) => map[h] ?? h).join(',');
@@ -270,6 +341,6 @@ const EN_OUT = join(OUT, 'en-us');
 mkdirSync(EN_OUT, { recursive: true });
 for (const [name, content] of Object.entries(files)) {
   writeFileSync(join(OUT, name), content, 'utf-8');
-  writeFileSync(join(EN_OUT, EN_NAMES[name]), translateHeader(content, EN_HEADERS[name]), 'utf-8');
+  writeFileSync(join(EN_OUT, EN_NAMES[name]), translateHeader(translateValues(content), EN_HEADERS[name]), 'utf-8');
   console.log(`${name}: ${content.trim().split('\n').length - 1} linhas`);
 }
