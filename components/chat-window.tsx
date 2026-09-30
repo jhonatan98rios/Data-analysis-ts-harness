@@ -30,7 +30,8 @@ function formatSize(bytes: number) {
 }
 
 interface DemoDataset {
-  file: string;
+  key: string;
+  files: Record<Lang, string>;
   emoji: string;
   content: Record<Lang, { title: string; description: string; question: string }>;
 }
@@ -40,7 +41,8 @@ interface DemoDataset {
 // public/demo/en-us/ tem os mesmos dados com o cabeçalho em inglês.
 const DEMO_DATASETS: DemoDataset[] = [
   {
-    file: 'vendas.csv',
+    key: 'vendas',
+    files: { 'pt-br': 'vendas.csv', 'en-us': 'sales.csv' },
     emoji: '📈',
     content: {
       'pt-br': {
@@ -56,7 +58,8 @@ const DEMO_DATASETS: DemoDataset[] = [
     },
   },
   {
-    file: 'marketing.csv',
+    key: 'marketing',
+    files: { 'pt-br': 'marketing.csv', 'en-us': 'marketing.csv' },
     emoji: '📣',
     content: {
       'pt-br': {
@@ -72,7 +75,8 @@ const DEMO_DATASETS: DemoDataset[] = [
     },
   },
   {
-    file: 'producao.csv',
+    key: 'producao',
+    files: { 'pt-br': 'producao.csv', 'en-us': 'production.csv' },
     emoji: '🏭',
     content: {
       'pt-br': {
@@ -88,7 +92,8 @@ const DEMO_DATASETS: DemoDataset[] = [
     },
   },
   {
-    file: 'clientes.csv',
+    key: 'clientes',
+    files: { 'pt-br': 'clientes.csv', 'en-us': 'customers.csv' },
     emoji: '👥',
     content: {
       'pt-br': {
@@ -269,15 +274,17 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
       content: m.text,
     }));
 
-    // ordem cronológica: o último arquivo é o mais recente. O store do servidor
-    // guarda só um dataset por tenant (parseAndStore sobrescreve), então o mais
-    // novo precisa vir por último — senão um upload antigo vence o atual.
-    const allFiles = [...messages, userMsg]
+    // O store do servidor guarda UM dataset por tenant e sobrescreve a cada arquivo.
+    // Por isso mandamos só o arquivo mais recente (o da mensagem atual ou, em
+    // follow-ups sem upload, o último do histórico) — assim ele nunca é vencido
+    // por um upload antigo.
+    const historyFiles = [...messages, userMsg]
       .filter((m) => m.file)
       .map((m) => m.file!);
+    const activeFile = historyFiles.at(-1);
 
     try {
-      await streamChat(history, allFiles.length > 0 ? allFiles : undefined);
+      await streamChat(history, activeFile ? [activeFile] : undefined);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'stream error';
       setMessages((prev) => [
@@ -324,21 +331,22 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
   };
 
   const handleDemoClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const demo = DEMO_DATASETS.find((d) => d.file === e.currentTarget.dataset.file);
+    const demo = DEMO_DATASETS.find((d) => d.key === e.currentTarget.dataset.key);
     if (demo) void loadDemo(demo);
   };
 
   // simula um upload: busca o CSV de exemplo e o envia pelo mesmo caminho
   const loadDemo = async (demo: DemoDataset) => {
     if (streaming || demoLoading) return;
-    setDemoLoading(demo.file);
+    setDemoLoading(demo.key);
     try {
+      const fileName = demo.files[lang];
       const dir = lang === 'en-us' ? 'en-us/' : '';
-      const res = await fetch(`/demo/${dir}${demo.file}`);
-      if (!res.ok) throw new Error(t(lang, 'demoNotFound', { file: demo.file }));
+      const res = await fetch(`/demo/${dir}${fileName}`);
+      if (!res.ok) throw new Error(t(lang, 'demoNotFound', { file: fileName }));
       const text = await res.text();
       const file: UploadedFile = {
-        name: demo.file,
+        name: fileName,
         type: 'text/csv',
         size: new TextEncoder().encode(text).length,
         data: toBase64(text),
@@ -451,13 +459,13 @@ export function ChatWindow({ sessionId, tenantId }: { sessionId: string; tenantI
 
               <div className="mt-5 w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {DEMO_DATASETS.map((demo) => {
-                  const loading = demoLoading === demo.file;
+                  const loading = demoLoading === demo.key;
                   const copy = demo.content[lang];
                   return (
                     <button
-                      key={demo.file}
+                      key={demo.key}
                       type="button"
-                      data-file={demo.file}
+                      data-key={demo.key}
                       onClick={handleDemoClick}
                       disabled={!!demoLoading || streaming}
                       className="text-left glass rounded-2xl p-3 transition-all hover:-translate-y-0.5 hover:border-indigo-400/60 dark:hover:border-indigo-400/40 disabled:opacity-60"
